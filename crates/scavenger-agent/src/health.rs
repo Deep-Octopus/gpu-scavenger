@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use scavenger_core::{GpuProbe, ProbeError};
 use scavenger_protocol::control::{AgentHealth, Device, DeviceState};
 
+use crate::capabilities::detect;
 use crate::probe::NvmlProbe;
 
 const MAX_TRANSIENT_FAILURES: u32 = 3;
@@ -11,6 +12,7 @@ const MAX_TRANSIENT_FAILURES: u32 = 3;
 pub struct ProbeRuntime {
     pub probe: Option<Arc<NvmlProbe>>,
     pub devices: Vec<Device>,
+    pub capabilities: scavenger_protocol::control::AgentCapabilities,
     pub health: i32,
     pub health_reason: String,
     transient_failures: u32,
@@ -26,6 +28,7 @@ pub fn initialize_probe() -> SharedProbeRuntime {
         Ok((probe, devices)) => ProbeRuntime {
             devices: device_messages(&devices),
             probe: Some(probe),
+            capabilities: detect(true, None),
             health: AgentHealth::AgentHealthy as i32,
             health_reason: String::new(),
             transient_failures: 0,
@@ -33,6 +36,7 @@ pub fn initialize_probe() -> SharedProbeRuntime {
         Err(error) => ProbeRuntime {
             probe: None,
             devices: Vec::new(),
+            capabilities: detect(false, Some(&error.to_string())),
             health: AgentHealth::AgentQuarantined as i32,
             health_reason: error.to_string(),
             transient_failures: 0,
@@ -62,6 +66,15 @@ pub fn health(runtime: &SharedProbeRuntime) -> (i32, String, Vec<Device>) {
                 Vec::new(),
             )
         })
+}
+
+pub fn capabilities(
+    runtime: &SharedProbeRuntime,
+) -> scavenger_protocol::control::AgentCapabilities {
+    runtime
+        .lock()
+        .map(|state| state.capabilities.clone())
+        .unwrap_or_else(|_| detect(false, Some("probe state lock poisoned")))
 }
 
 pub fn set_quarantined(runtime: &SharedProbeRuntime, reason: impl Into<String>) {

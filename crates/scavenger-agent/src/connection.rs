@@ -9,7 +9,7 @@ use tonic::transport::{Certificate, ClientTlsConfig, Endpoint, Identity};
 
 use crate::agent::{AgentConfig, AgentError};
 use crate::claim::ClaimFile;
-use crate::health::{health, refresh_probe, set_quarantined, SharedProbeRuntime};
+use crate::health::{capabilities, health, refresh_probe, set_quarantined, SharedProbeRuntime};
 
 #[derive(Debug, Clone)]
 pub struct AgentTlsConfig {
@@ -55,6 +55,7 @@ pub fn hello(
     token_file: Option<&std::path::Path>,
 ) -> Result<AgentMessage, AgentError> {
     let (health, health_reason, devices) = health(runtime);
+    let capabilities = capabilities(runtime);
     let enrollment_token = token_file
         .map(std::fs::read_to_string)
         .transpose()
@@ -70,6 +71,7 @@ pub fn hello(
                 health,
                 health_reason,
                 enrollment_token,
+                capabilities: Some(capabilities),
             },
         )),
     })

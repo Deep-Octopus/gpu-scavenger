@@ -30,17 +30,27 @@ function renderAgents(snapshot) {
   const list = $("#agent-list");
   if (!snapshot.agents.length) {
     list.innerHTML = '<p class="table-message">No Agent has enrolled yet.</p>';
+    $("#capability-note").textContent = "No capability report yet.";
     return;
   }
+  const schedulable = snapshot.agents.filter((agent) => agent.capabilities.schedulable).length;
+  $("#capability-note").textContent = `${schedulable}/${snapshot.agents.length} agent(s) pass the current Linux/NVIDIA containment boundary.`;
   list.innerHTML = snapshot.agents.map((agent) => {
     const device = agent.devices[0];
     const deviceText = device
       ? `<strong>${device.uuid}</strong><span>${formatMemory(device.free_memory_bytes)} free</span><span>${device.process_count} proc</span>`
       : '<span>No device inventory</span>';
+    const capabilities = agent.capabilities;
     return `<div class="agent-row">
       <div><div class="agent-name">${escapeHtml(agent.agent_id)}</div><div class="agent-id">session ${agent.session_id}</div></div>
       <span class="health health-${agent.health}">${agent.health}</span>
       <div class="device-line">${deviceText}</div>
+      <div class="capability-line" title="${escapeHtml(capabilities.reason)}">
+        <span>${escapeHtml(capabilities.operating_system)}/${escapeHtml(capabilities.architecture)}</span>
+        <span>${escapeHtml(capabilities.gpu_backend)}</span>
+        <span>${escapeHtml(capabilities.isolation)}</span>
+        <span>MIG ${escapeHtml(capabilities.mig)}</span>
+      </div>
     </div>`;
   }).join("");
 }

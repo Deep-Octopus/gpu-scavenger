@@ -18,6 +18,19 @@ pub struct AgentSnapshot {
     pub busy: bool,
     pub session_id: u64,
     pub devices: Vec<DeviceSnapshot>,
+    pub capabilities: CapabilitiesSnapshot,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CapabilitiesSnapshot {
+    pub operating_system: String,
+    pub architecture: String,
+    pub gpu_backend: String,
+    pub isolation: String,
+    pub checkpoint: String,
+    pub mig: String,
+    pub schedulable: bool,
+    pub reason: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -86,6 +99,16 @@ pub(super) fn build(state: &ControllerState) -> Result<ControllerSnapshot, Strin
                     process_count: device.process_count,
                 })
                 .collect(),
+            capabilities: CapabilitiesSnapshot {
+                operating_system: agent.capabilities.operating_system.clone(),
+                architecture: agent.capabilities.architecture.clone(),
+                gpu_backend: agent.capabilities.gpu_backend.clone(),
+                isolation: agent.capabilities.isolation.clone(),
+                checkpoint: agent.capabilities.checkpoint.clone(),
+                mig: agent.capabilities.mig.clone(),
+                schedulable: agent.capabilities.schedulable,
+                reason: agent.capabilities.reason.clone(),
+            },
         })
         .collect();
     Ok(ControllerSnapshot {

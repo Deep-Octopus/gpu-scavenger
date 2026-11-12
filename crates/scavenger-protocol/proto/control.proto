@@ -31,6 +31,18 @@ message AgentHello {
   AgentHealth health = 3;
   string health_reason = 4;
   string enrollment_token = 5;
+  AgentCapabilities capabilities = 6;
+}
+
+message AgentCapabilities {
+  string operating_system = 1;
+  string architecture = 2;
+  string gpu_backend = 3;
+  string isolation = 4;
+  string checkpoint = 5;
+  string mig = 6;
+  bool schedulable = 7;
+  string reason = 8;
 }
 
 message Device {

@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use scavenger_protocol::control::{
-    agent_message, control_server::Control, AgentHealth, AgentMessage, ClaimEvent, DeviceState,
-    MasterMessage, TaskEvent, Welcome,
+    agent_message, control_server::Control, AgentCapabilities, AgentHealth, AgentMessage,
+    ClaimEvent, DeviceState, MasterMessage, TaskEvent, Welcome,
 };
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -52,6 +52,7 @@ struct AgentHandle {
     quarantined: bool,
     degraded: bool,
     health_reason: String,
+    capabilities: AgentCapabilities,
     next_command_seq: u64,
 }
 
@@ -171,6 +172,7 @@ impl Control for ControllerService {
                     ),
                     degraded: hello.health == AgentHealth::AgentDegraded as i32,
                     health_reason: hello.health_reason.clone(),
+                    capabilities: hello.capabilities.unwrap_or_default(),
                     next_command_seq: 0,
                 },
             )

@@ -38,6 +38,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 command -v tar >/dev/null || { echo "tar is required" >&2; exit 1; }
+command -v gzip >/dev/null || { echo "gzip is required" >&2; exit 1; }
 command -v sha256sum >/dev/null || { echo "sha256sum is required" >&2; exit 1; }
 command -v file >/dev/null || { echo "file is required" >&2; exit 1; }
 [[ -x "$binary_dir/scavenger-controller" ]] || {
@@ -82,7 +83,11 @@ fi
 chmod 0755 "$bundle_root/install.sh" "$bundle_root/scripts/"*.sh \
     "$bundle_root/bin/"*
 (cd "$bundle_root" && sha256sum bin/* > SHA256SUMS)
+find "$bundle_root" -exec touch -t 200001010000 {} +
 
-COPYFILE_DISABLE=1 tar --format=ustar -C "$stage" -czf "$output" "$(basename "$bundle_root")"
+archive="$stage/gpu-scavenger-linux-x86_64-0.1.0.tar"
+COPYFILE_DISABLE=1 tar --format=ustar --uid 0 --gid 0 --uname root --gname root \
+    -C "$stage" -cf "$archive" "$(basename "$bundle_root")"
+gzip -n -c "$archive" >"$output"
 sha256sum "$output"
 echo "created $output"

@@ -40,6 +40,13 @@ pub async fn serve(
     address: SocketAddr,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = TcpListener::bind(address).await?;
+    serve_with_listener(service, listener).await
+}
+
+pub async fn serve_with_listener(
+    service: ControllerService,
+    listener: TcpListener,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let state = WebState { service };
     let app = Router::new()
         .route("/", get(index))

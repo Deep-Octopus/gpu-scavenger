@@ -1,14 +1,11 @@
-mod auth;
-mod server;
-mod store;
-mod web;
-
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use server::{ControllerService, TlsServerConfig};
-use store::{EnqueueOptions, EnqueueTask, TaskStore};
+use scavenger_controller::web;
+use scavenger_controller::{
+    ControllerService, EnqueueOptions, EnqueueTask, TaskStore, TlsServerConfig,
+};
 
 #[derive(Debug, Parser)]
 #[command(name = "scavenger-controller")]

@@ -11,6 +11,7 @@
 - Claim 触发后，Checkpointed 任务先等待非空 checkpoint 文件并提交 ACK，再 HardStop 自有 scope；释放验证通过后任务回到 queued。
 - Agent 握手报告 OS、架构、GPU 后端、隔离边界、checkpoint/MIG 能力和 schedulable 标志；Controller 对 `schedulable=false` 的 Agent 停止调度。
 - 本地 Web 控制台提供 `/api/status` 和 `/api/tasks`，展示任务指标、Agent 健康、能力边界和 task ledger，并处理加载、空态、错误态和 reduced-motion。
+- macOS Tauri 原生壳复用同一控制台，应用数据写入 macOS Application Support，Web 服务绑定动态 loopback 端口，不依赖已被其他程序占用的 `18080`。
 
 ## 本地门禁
 
@@ -87,7 +88,14 @@ Agent 二进制 SHA-256：
 - 本次轮换使用的 Controller 二进制 SHA-256 为 `741d1b824cb5b20107a6687f13bf0aa6558d04f55af095b67606489854974b3c`，Agent 二进制 SHA-256 为 `667b0e0c759b0194aae5c7630ca26c8e376bfb384b9038707607e6f2807a292a`。
 - 轮换 smoke 结束后已停止并删除本次创建的进程、证书、源码包和临时目录；GPU2 复核为 2 MiB、MIG Disabled、无计算进程，端口已关闭。
 
+## macOS Tauri 本机验收
+
+- 使用 `npx --yes @tauri-apps/cli@2.12.4 build --bundles app` 成功生成 `GPU Scavenger.app`，包大小约 14.42 MiB。
+- 从 `target/release/bundle/macos/GPU Scavenger.app` 启动后，原生窗口加载同一 Web 控制台；本次动态 loopback 端口为 `127.0.0.1:52642`。
+- 窗口显示 `Controller live`、0 个 Agent、空任务账本；点击 `Refresh` 后仍能读取 `/api/status`，返回空队列和 0 Agent 指标。
+- 18080 被本机 Docker Desktop 占用时没有修改或终止 Docker；桌面壳使用动态端口，和现有服务并存。
+
 ## 支持边界
 
 已验证：Linux x86_64、NVIDIA NVML、systemd scope、cgroup v2、MIG Disabled 下的 identity 观测、checkpoint helper 和 Web API。  
-未验证且当前 fail-closed：Windows Job Object、AMD/ROCm、MIG 资源切分调度、Tauri 原生壳、多 Master、生产 artifact 存储和任意第三方训练框架恢复兼容性。
+未验证且当前 fail-closed：Windows Job Object、AMD/ROCm、MIG 资源切分调度、多 Master、生产 artifact 存储和任意第三方训练框架恢复兼容性。

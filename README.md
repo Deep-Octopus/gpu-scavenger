@@ -23,6 +23,8 @@ cargo run -p scavenger-controller -- serve \
 
 Open `http://127.0.0.1:18080` for the operator console. For a shared network, configure TLS/mTLS and an enrollment token file before exposing the control port.
 
+The TLS Controller reloads its certificate and key on Unix after `SIGHUP`. Replace both files atomically, then run `kill -HUP <controller-pid>`; new Agent sessions use the new certificate while existing long-lived streams drain and reconnect normally.
+
 ## Run an Agent on a verified node
 
 ```bash

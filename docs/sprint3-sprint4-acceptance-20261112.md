@@ -77,6 +77,16 @@ Agent 二进制 SHA-256：
 
 验收结束后只停止和删除本次创建的 Agent、Controller、scope、Claim、临时证书、token、checkpoint、源码包和临时 Rust 目录；没有终止外部 PID、重置 GPU、改动系统服务或 Docker 配置。最终 GPU2 只读复核仍为 2 MiB。
 
+## TLS 证书轮换
+
+在同一节点的独立目录和端口 `50074` / `18082` 上完成第二次 smoke：
+
+- 轮换前 Controller 证书指纹为 `53:58:E4:50:99:CF:AD:6A:DD:5A:48:21:1B:8B:54:9F:F7:95:9F:9A:61:96:8F:81:74:C4:32:2E:D7:E8:14:BE`；原子替换证书和私钥后发送 `SIGHUP`。
+- 轮换后新连接读到指纹 `00:90:BE:D0:6F:DD:65:B2:6A:04:DD:23:2C:CE:F3:30:BF:3C:73:B2:5A:A9:1E:EA:11:1C:45:10:E2:B0:16:43`；`sprint24-reload-agent3` 以新证书建立 session 2，能力报告为 Linux/NVIDIA、`schedulable=true`。
+- 该实现只替换监听任务并重新读取证书文件，不强制结束已有 gRPC 长连接；旧 session 保持到正常断线或 Agent 自行重连，避免证书轮换误杀正在运行的任务。
+- 本次轮换使用的 Controller 二进制 SHA-256 为 `741d1b824cb5b20107a6687f13bf0aa6558d04f55af095b67606489854974b3c`，Agent 二进制 SHA-256 为 `667b0e0c759b0194aae5c7630ca26c8e376bfb384b9038707607e6f2807a292a`。
+- 轮换 smoke 结束后已停止并删除本次创建的进程、证书、源码包和临时目录；GPU2 复核为 2 MiB、MIG Disabled、无计算进程，端口已关闭。
+
 ## 支持边界
 
 已验证：Linux x86_64、NVIDIA NVML、systemd scope、cgroup v2、MIG Disabled 下的 identity 观测、checkpoint helper 和 Web API。  

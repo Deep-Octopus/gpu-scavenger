@@ -64,7 +64,7 @@ GPU-Scavenger 面向高校实验室、AIGC 工作室和拥有多台散装工作�
 - HardStop 后同时检查 scope、cgroup 归属、NVML 进程和显存基线，连续两次满足条件后再回报 ReleaseVerified；
 - bounded channel（容量 32）、PID start time/UID/cgroup identity 读取和 SQLite lease requeue；
 - TaskEvent 和 ResultCommit 使用稳定 event_id；同一 task_id + lease_epoch 的相同结果重复提交是幂等的，冲突元数据会被拒绝；成功事件必须先看到结果提交；结果文件使用受大小上限保护的流式 SHA-256；
-- Controller 可选 TLS/mTLS，Agent 使用自定义 CA 建立出站 stream；连接断开时停止自有 scope、等待 active task 收敛并按有界退避重连；
+- Controller 可选 TLS/mTLS，Agent 使用自定义 CA 建立出站 stream；Unix Controller 支持通过 `SIGHUP` 重新读取证书和私钥，新连接使用新证书，已有长连接自然收敛；连接断开时停止自有 scope、等待 active task 收敛并按有界退避重连；
 - AgentHello/Heartbeat 上报健康态，NVML/Claim 边界失败进入 Quarantined；Controller 为会话分配 session_id，重连时回收该 Agent 的租约并忽略旧会话消息；
 - enrollment token 文件校验支持按连接读取，替换 token 文件后新连接使用新 token；TaskAssignment 和 TaskEvent 使用单调 command_seq，旧命令被 Agent 幂等丢弃；
 - 瞬态探针错误先进入 Degraded，连续失败进入 Quarantined；Controller 快照和 Web 控制台展示健康、能力、任务和指标；
@@ -895,6 +895,7 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 本轮已完成并记录的工程闭环：
 
 - mTLS、错误 enrollment token 拒绝、token 文件替换后的新连接认证、断线重连和旧 session 隔离；
+- Unix Controller 的 TLS 证书/私钥 `SIGHUP` 轮换；新 Agent 连接使用新证书，已有长连接不被强制终止；
 - TaskAssignment/TaskEvent command sequence 去重、Degraded/Quarantined 调度门禁和多 Agent round-robin；
 - CheckpointRequest/CheckpointAck、SIGUSR1 触发、原子 checkpoint 文件、SHA-256 记录、Claim 后回收和 queued 重排；
 - 本地 Web 控制台 `/api/status`、`/api/tasks`、任务账本、Agent 能力展示和受限派发表单；

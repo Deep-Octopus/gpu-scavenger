@@ -76,10 +76,13 @@ cp "$root_dir/packaging/linux/uninstall.sh" "$bundle_root/scripts/"
 if [[ -f "$binary_dir/BUILD.txt" ]]; then
     cp "$binary_dir/BUILD.txt" "$bundle_root/"
 fi
+if command -v xattr >/dev/null; then
+    xattr -rc "$stage"
+fi
 chmod 0755 "$bundle_root/install.sh" "$bundle_root/scripts/"*.sh \
     "$bundle_root/bin/"*
 (cd "$bundle_root" && sha256sum bin/* > SHA256SUMS)
 
-tar -C "$stage" -czf "$output" "$(basename "$bundle_root")"
+COPYFILE_DISABLE=1 tar --format=ustar -C "$stage" -czf "$output" "$(basename "$bundle_root")"
 sha256sum "$output"
 echo "created $output"

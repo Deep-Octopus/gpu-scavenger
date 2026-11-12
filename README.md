@@ -64,3 +64,33 @@ cargo run -p scavenger-agent -- run \
 Use `scavenger-agent claim` and `scavenger-agent unclaim` for an explicit host demand. Task policy `stateless` is the default; `checkpointed` requires a task that implements the `GPU_SCAVENGER_CHECKPOINT_PATH` and SIGUSR1 protocol described in [`gpu_scavenger.md`](gpu_scavenger.md).
 
 The design, support matrix and remote acceptance records are in [`gpu_scavenger.md`](gpu_scavenger.md) and [`docs/`](docs/).
+
+## Distribute the Linux runtime
+
+The Linux delivery artifact is a prebuilt runtime bundle. Build it from an
+already compiled Linux x86_64 `target/release` directory; the packaging step
+does not invoke Cargo:
+
+```bash
+packaging/linux/build-bundle.sh \
+  --binary-dir /path/to/linux-target/release \
+  --output dist/gpu-scavenger-linux-x86_64-0.1.0.tar.gz
+```
+
+On a GPU host, unpack and install it into an explicit prefix. `/share` is a
+valid choice when the root filesystem is constrained:
+
+```bash
+tar -xzf gpu-scavenger-linux-x86_64-0.1.0.tar.gz
+cd gpu-scavenger-linux-x86_64-0.1.0
+./install.sh --prefix /share/gpu-scavenger
+cd /share/gpu-scavenger
+./scripts/start.sh
+./scripts/status.sh
+```
+
+The bundle contains the Controller and Agent binaries, a local configuration
+template, SHA256 verification, and lifecycle scripts. It does not install a
+systemd unit, change global services, or require a Rust toolchain on the target
+host. See [`packaging/linux/README.md`](packaging/linux/README.md) for the
+uninstall and SSH tunnel commands.

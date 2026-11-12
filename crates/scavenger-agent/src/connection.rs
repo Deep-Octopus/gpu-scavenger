@@ -114,18 +114,30 @@ pub fn endpoint(config: &AgentConfig) -> Result<Endpoint, AgentError> {
         .map_err(|error| AgentError::Config(error.to_string()))
 }
 
-pub fn hello(runtime: &SharedProbeRuntime, agent_id: &str) -> AgentMessage {
+pub fn hello(
+    runtime: &SharedProbeRuntime,
+    agent_id: &str,
+    token_file: Option<&std::path::Path>,
+) -> Result<AgentMessage, AgentError> {
     let (health, health_reason, devices) = health(runtime);
-    AgentMessage {
+    let enrollment_token = token_file
+        .map(std::fs::read_to_string)
+        .transpose()
+        .map_err(|error| AgentError::Config(error.to_string()))?
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    Ok(AgentMessage {
         message: Some(agent_message::Message::Hello(
             scavenger_protocol::control::AgentHello {
                 agent_id: agent_id.to_string(),
                 devices,
                 health,
                 health_reason,
+                enrollment_token,
             },
         )),
-    }
+    })
 }
 
 pub fn spawn_heartbeat(

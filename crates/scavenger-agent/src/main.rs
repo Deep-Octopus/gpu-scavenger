@@ -34,6 +34,8 @@ enum Command {
         tls_key: Option<PathBuf>,
         #[arg(long, default_value = "localhost")]
         tls_domain: String,
+        #[arg(long)]
+        enrollment_token_file: Option<PathBuf>,
     },
     Probe,
     Claim {
@@ -68,6 +70,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             tls_cert,
             tls_key,
             tls_domain,
+            enrollment_token_file,
         } => {
             if tls_cert.is_some() != tls_key.is_some() {
                 return Err("--tls-cert and --tls-key must be provided together".into());
@@ -87,6 +90,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     private_key: tls_key,
                     domain: tls_domain,
                 }),
+                enrollment_token: enrollment_token_file,
             })
             .await?;
         }

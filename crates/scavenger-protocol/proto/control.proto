@@ -13,6 +13,7 @@ message AgentMessage {
     TaskEvent task_event = 3;
     ClaimEvent claim = 4;
     ResultCommit result_commit = 5;
+  CheckpointAck checkpoint_ack = 6;
   }
 }
 
@@ -20,6 +21,7 @@ message MasterMessage {
   oneof message {
     Welcome welcome = 1;
     TaskAssignment task = 2;
+  CheckpointRequest checkpoint_request = 3;
   }
 }
 
@@ -28,6 +30,7 @@ message AgentHello {
   repeated Device devices = 2;
   AgentHealth health = 3;
   string health_reason = 4;
+  string enrollment_token = 5;
 }
 
 message Device {
@@ -53,6 +56,7 @@ enum AgentHealth {
   AGENT_HEALTH_UNSPECIFIED = 0;
   AGENT_HEALTHY = 1;
   AGENT_QUARANTINED = 2;
+  AGENT_DEGRADED = 3;
 }
 
 message TaskAssignment {
@@ -64,6 +68,10 @@ message TaskAssignment {
   map<string, string> env = 6;
   string workdir = 7;
   string output_path = 8;
+  uint32 policy = 9;
+  string checkpoint_path = 10;
+  uint64 checkpoint_deadline_ms = 11;
+  uint64 command_seq = 12;
 }
 
 enum TaskEventKind {
@@ -82,6 +90,7 @@ message TaskEvent {
   string message = 5;
   string output_path = 6;
   string event_id = 7;
+  uint64 command_seq = 8;
 }
 
 message ResultCommit {
@@ -99,6 +108,28 @@ message ClaimEvent {
   string device_uuid = 2;
   bool active = 3;
   string reason = 4;
+}
+
+message CheckpointRequest {
+  string task_id = 1;
+  uint64 lease_epoch = 2;
+  uint64 command_seq = 3;
+  uint64 deadline_ms = 4;
+  string reason = 5;
+  string checkpoint_path = 6;
+}
+
+message CheckpointAck {
+  string event_id = 1;
+  string agent_id = 2;
+  string task_id = 3;
+  uint64 lease_epoch = 4;
+  uint64 command_seq = 5;
+  string checkpoint_path = 6;
+  uint64 size_bytes = 7;
+  string digest = 8;
+  bool success = 9;
+  string message = 10;
 }
 
 message Welcome {

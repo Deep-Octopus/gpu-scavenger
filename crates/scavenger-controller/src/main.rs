@@ -1,3 +1,4 @@
+mod auth;
 mod server;
 mod store;
 
@@ -29,6 +30,8 @@ enum Command {
         tls_key: Option<PathBuf>,
         #[arg(long)]
         tls_client_ca: Option<PathBuf>,
+        #[arg(long)]
+        enrollment_token_file: Option<PathBuf>,
     },
     Enqueue {
         #[arg(long, default_value = "/tmp/gpu-scavenger/controller.sqlite3")]
@@ -69,6 +72,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             tls_cert,
             tls_key,
             tls_client_ca,
+            enrollment_token_file,
         } => {
             if tls_cert.is_some() != tls_key.is_some() {
                 return Err("--tls-cert and --tls-key must be provided together".into());
@@ -84,7 +88,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     private_key,
                     client_ca: tls_client_ca,
                 });
-            ControllerService::new(store).serve(listen, tls).await?;
+            ControllerService::new(store)
+                .with_enrollment_token_file(enrollment_token_file)
+                .serve(listen, tls)
+                .await?;
         }
         Command::Enqueue {
             db,

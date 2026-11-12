@@ -90,6 +90,7 @@ fn task_event_message(
                 "task:{}:{}:{}",
                 assignment.task_id, assignment.lease_epoch, kind as i32
             ),
+            command_seq: assignment.command_seq,
         })),
     }
 }

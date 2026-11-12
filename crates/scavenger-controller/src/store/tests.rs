@@ -25,6 +25,7 @@ fn queued_task_is_leased_and_requeued_after_stop() -> Result<(), Box<dyn std::er
         message: String::new(),
         output_path: String::new(),
         event_id: "task-1-started".to_string(),
+        command_seq: 1,
     })?;
     store.record_event(&TaskEvent {
         agent_id: "agent-1".to_string(),
@@ -34,6 +35,7 @@ fn queued_task_is_leased_and_requeued_after_stop() -> Result<(), Box<dyn std::er
         message: String::new(),
         output_path: String::new(),
         event_id: "task-1-stopped".to_string(),
+        command_seq: 1,
     })?;
     store.record_event(&TaskEvent {
         agent_id: "agent-1".to_string(),
@@ -43,6 +45,7 @@ fn queued_task_is_leased_and_requeued_after_stop() -> Result<(), Box<dyn std::er
         message: String::new(),
         output_path: String::new(),
         event_id: "task-1-released".to_string(),
+        command_seq: 1,
     })?;
     let listed = store.list()?;
     assert_eq!(listed.len(), 1);
@@ -94,6 +97,7 @@ fn result_commit_is_idempotent_and_rejects_conflicts() -> Result<(), Box<dyn std
         message: "done".to_string(),
         output_path: "/tmp/output.bin".to_string(),
         event_id: "task-result-succeeded".to_string(),
+        command_seq: 1,
     };
     store.record_event(&success)?;
     store.record_event(&success)?;

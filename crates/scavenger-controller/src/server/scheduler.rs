@@ -23,7 +23,11 @@ impl ControllerState {
             self.set_busy(&agent_id, false);
             return Ok(());
         };
-        let assignment = assignment_from_task(&task);
+        let Some(command_seq) = self.next_command_seq(&agent_id) else {
+            self.set_busy(&agent_id, false);
+            return Ok(());
+        };
+        let assignment = assignment_from_task(&task, command_seq);
         if sender
             .try_send(Ok(MasterMessage {
                 message: Some(scavenger_protocol::control::master_message::Message::Task(
@@ -58,7 +62,7 @@ impl ControllerState {
             let Some(agent) = agents.get_mut(agent_id) else {
                 continue;
             };
-            if agent.busy || agent.claim_active || agent.quarantined {
+            if agent.busy || agent.claim_active || agent.quarantined || agent.degraded {
                 continue;
             }
             agent.busy = true;
@@ -73,7 +77,7 @@ impl ControllerState {
     }
 }
 
-fn assignment_from_task(task: &TaskRecord) -> TaskAssignment {
+fn assignment_from_task(task: &TaskRecord, command_seq: u64) -> TaskAssignment {
     TaskAssignment {
         task_id: task.task_id.clone(),
         lease_epoch: task.lease_epoch,
@@ -83,5 +87,7 @@ fn assignment_from_task(task: &TaskRecord) -> TaskAssignment {
         env: task.env.clone().into_iter().collect(),
         workdir: task.workdir.clone().unwrap_or_default(),
         output_path: task.output_path.clone().unwrap_or_default(),
+        command_seq,
+        ..Default::default()
     }
 }

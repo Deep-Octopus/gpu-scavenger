@@ -13,6 +13,7 @@ use tokio_stream::wrappers::ReceiverStream;
 use tonic::transport::{Certificate, Identity, ServerTlsConfig};
 use tonic::{Request, Response, Status, Streaming};
 
+use crate::auth::EnrollmentGuard;
 use crate::store::{TaskRecord, TaskStore};
 
 mod scheduler;
@@ -33,6 +34,7 @@ pub struct TlsServerConfig {
 
 struct ControllerState {
     store: TaskStore,
+    enrollment: Mutex<EnrollmentGuard>,
     agents: Mutex<BTreeMap<String, AgentHandle>>,
     next_agent: Mutex<usize>,
     next_session: Mutex<u64>,
@@ -45,6 +47,8 @@ struct AgentHandle {
     busy: bool,
     claim_active: bool,
     quarantined: bool,
+    degraded: bool,
+    next_command_seq: u64,
 }
 
 impl ControllerService {
@@ -52,11 +56,19 @@ impl ControllerService {
         Self {
             state: Arc::new(ControllerState {
                 store,
+                enrollment: Mutex::new(EnrollmentGuard::default()),
                 agents: Mutex::new(BTreeMap::new()),
                 next_agent: Mutex::new(0),
                 next_session: Mutex::new(0),
             }),
         }
+    }
+
+    pub fn with_enrollment_token_file(self, path: Option<PathBuf>) -> Self {
+        if let Ok(mut guard) = self.state.enrollment.lock() {
+            *guard = EnrollmentGuard::from_file(path);
+        }
+        self
     }
 
     pub async fn run_scheduler(self) {
@@ -120,6 +132,9 @@ impl Control for ControllerService {
             Some(agent_message::Message::Hello(hello)) if !hello.agent_id.is_empty() => hello,
             _ => return Err(Status::invalid_argument("first message must be AgentHello")),
         };
+        self.state
+            .validate_enrollment(&hello.enrollment_token)
+            .map_err(Status::permission_denied)?;
         let agent_id = hello.agent_id.clone();
         let devices = hello
             .devices
@@ -145,7 +160,13 @@ impl Control for ControllerService {
                     sender: sender.clone(),
                     busy: false,
                     claim_active: false,
-                    quarantined: hello.health != AgentHealth::AgentHealthy as i32,
+                    quarantined: !matches!(
+                        hello.health,
+                        x if x == AgentHealth::AgentHealthy as i32
+                            || x == AgentHealth::AgentDegraded as i32
+                    ),
+                    degraded: hello.health == AgentHealth::AgentDegraded as i32,
+                    next_command_seq: 0,
                 },
             )
             .map_err(|error| Status::internal(error.to_string()))?;
@@ -174,6 +195,14 @@ impl Control for ControllerService {
 }
 
 impl ControllerState {
+    fn validate_enrollment(&self, token: &str) -> Result<(), String> {
+        self.enrollment
+            .lock()
+            .map_err(|_| "enrollment guard lock poisoned".to_string())?
+            .validate(token)
+            .map_err(|error| error.to_string())
+    }
+
     fn register_agent(
         &self,
         agent_id: String,
@@ -241,6 +270,7 @@ impl ControllerState {
                 }
             }
             agent_message::Message::Claim(claim) => self.update_claim(agent_id, claim),
+            agent_message::Message::CheckpointAck(_) => {}
             agent_message::Message::Hello(_) => {}
         }
     }
@@ -264,9 +294,22 @@ impl ControllerState {
     fn update_health(&self, agent_id: &str, health: i32) {
         if let Ok(mut agents) = self.agents.lock() {
             if let Some(agent) = agents.get_mut(agent_id) {
-                agent.quarantined = health != AgentHealth::AgentHealthy as i32;
+                agent.quarantined = !matches!(
+                    health,
+                    x if x == AgentHealth::AgentHealthy as i32
+                        || x == AgentHealth::AgentDegraded as i32
+                );
+                agent.degraded = health == AgentHealth::AgentDegraded as i32;
             }
         }
+    }
+
+    pub(super) fn next_command_seq(&self, agent_id: &str) -> Option<u64> {
+        self.agents.lock().ok().and_then(|mut agents| {
+            let agent = agents.get_mut(agent_id)?;
+            agent.next_command_seq = agent.next_command_seq.saturating_add(1);
+            Some(agent.next_command_seq)
+        })
     }
 
     fn set_busy(&self, agent_id: &str, busy: bool) {

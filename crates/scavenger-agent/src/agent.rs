@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -24,6 +24,7 @@ pub struct AgentConfig {
     pub claim_path: ClaimFile,
     pub poll_interval: Duration,
     pub tls: Option<AgentTlsConfig>,
+    pub enrollment_token: Option<std::path::PathBuf>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -85,13 +86,18 @@ async fn run_connection(
     let mut client = ControlClient::new(channel);
     let (sender, receiver) = mpsc::channel(32);
     sender
-        .send(hello(runtime, &config.agent_id))
+        .send(hello(
+            runtime,
+            &config.agent_id,
+            config.enrollment_token.as_deref(),
+        )?)
         .await
         .map_err(|_| AgentError::ChannelClosed)?;
     let response = client
         .open_stream(Request::new(ReceiverStream::new(receiver)))
         .await?;
     let connection_alive = Arc::new(AtomicBool::new(true));
+    let last_command_seq = Arc::new(AtomicU64::new(0));
     health_ok.store(is_healthy(runtime), Ordering::Release);
     let heartbeat = spawn_heartbeat(
         sender.clone(),
@@ -120,6 +126,7 @@ async fn run_connection(
                             health_ok: health_ok.clone(),
                             connection_alive: connection_alive.clone(),
                             poll_interval: config.poll_interval,
+                            last_command_seq: last_command_seq.clone(),
                         },
                     );
                 }
@@ -143,6 +150,7 @@ struct AssignmentContext {
     health_ok: Arc<AtomicBool>,
     connection_alive: Arc<AtomicBool>,
     poll_interval: Duration,
+    last_command_seq: Arc<AtomicU64>,
 }
 
 fn spawn_assignment(assignment: TaskAssignment, context: AssignmentContext) {
@@ -157,6 +165,9 @@ async fn handle_assignment(
     assignment: TaskAssignment,
     context: AssignmentContext,
 ) -> Result<(), AgentError> {
+    if !accept_command(&context.last_command_seq, assignment.command_seq) {
+        return Ok(());
+    }
     if context.active.swap(true, Ordering::AcqRel) {
         send_task_event(
             &context.sender,
@@ -186,6 +197,21 @@ async fn handle_assignment(
         .map_err(|error| AgentError::Join(error.to_string()))?;
     context.active.store(false, Ordering::Release);
     result
+}
+
+fn accept_command(last: &AtomicU64, command_seq: u64) -> bool {
+    loop {
+        let current = last.load(Ordering::Acquire);
+        if command_seq <= current {
+            return false;
+        }
+        if last
+            .compare_exchange(current, command_seq, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
+        {
+            return true;
+        }
+    }
 }
 
 async fn wait_for_active(active: &Arc<AtomicBool>) {

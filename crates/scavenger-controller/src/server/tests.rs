@@ -48,6 +48,8 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 busy: false,
                 claim_active: false,
                 quarantined: false,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;
@@ -61,6 +63,8 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 busy: false,
                 claim_active: false,
                 quarantined: false,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;
@@ -104,6 +108,8 @@ fn scheduler_waits_for_release_verified_before_reusing_agent(
                 busy: false,
                 claim_active: false,
                 quarantined: false,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;
@@ -116,6 +122,7 @@ fn scheduler_waits_for_release_verified_before_reusing_agent(
         message: String::new(),
         output_path: String::new(),
         event_id: "task-release-stopped".to_string(),
+        command_seq: 1,
     };
     let session_id = state.session_id("agent-a").ok_or("missing session")?;
     state.handle_message(
@@ -163,6 +170,8 @@ fn scheduler_skips_quarantined_agents() -> Result<(), Box<dyn std::error::Error 
                 busy: false,
                 claim_active: false,
                 quarantined: true,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;
@@ -193,6 +202,8 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 busy: false,
                 claim_active: false,
                 quarantined: false,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;
@@ -207,6 +218,8 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 busy: false,
                 claim_active: false,
                 quarantined: false,
+                degraded: false,
+                next_command_seq: 0,
             },
         )
         .map_err(|error| error.to_string())?;

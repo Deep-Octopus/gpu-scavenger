@@ -2,16 +2,18 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use scavenger_core::{GpuProbe, TaskHandle, TaskSpec};
+use scavenger_core::{CheckpointRequest, GpuProbe, TaskHandle, TaskPolicy, TaskSpec};
 use scavenger_protocol::control::{AgentMessage, TaskAssignment, TaskEventKind};
 use tokio::sync::mpsc;
 
 use crate::agent::AgentError;
 use crate::artifact::digest_file;
 use crate::assignment::{assignment_to_spec, spec_device};
+use crate::checkpoint::wait_for_checkpoint;
 use crate::claim::ClaimFile;
 use crate::events::{
-    send_claim_event_blocking, send_result_commit_blocking, send_task_event_blocking,
+    send_checkpoint_ack_blocking, send_claim_event_blocking, send_result_commit_blocking,
+    send_task_event_blocking,
 };
 use crate::probe::NvmlProbe;
 use crate::release::{wait_for_cgroup_id, wait_for_release, wait_for_scope_empty};
@@ -162,7 +164,7 @@ fn monitor_task(context: &mut TaskContext<'_>, poll_interval: Duration) -> Resul
                 true,
                 "claim file active",
             )?;
-            return stop_and_report(context, "task stopped for host claim");
+            return stop_for_claim(context);
         }
         if snapshot
             .processes
@@ -201,6 +203,48 @@ fn stop_and_report(context: &mut TaskContext<'_>, reason: &str) -> Result<(), Ag
         TaskEventKind::TaskEventReleaseVerified,
         "task cgroup and GPU process released",
     )
+}
+
+fn stop_for_claim(context: &mut TaskContext<'_>) -> Result<(), AgentError> {
+    if let TaskPolicy::Checkpointed {
+        checkpoint_deadline_ms,
+    } = context.spec.policy
+    {
+        return checkpoint_and_stop(context, checkpoint_deadline_ms);
+    }
+    stop_and_report(context, "task stopped for host claim")
+}
+
+fn checkpoint_and_stop(
+    context: &mut TaskContext<'_>,
+    checkpoint_deadline_ms: u64,
+) -> Result<(), AgentError> {
+    let request = CheckpointRequest {
+        task_id: context.spec.task_id.clone(),
+        lease_epoch: context.spec.lease_epoch,
+        deadline_ms: checkpoint_deadline_ms,
+        reason: "host claim requested checkpoint".to_string(),
+        checkpoint_path: context.spec.checkpoint_path.clone(),
+    };
+    context
+        .runner
+        .request_checkpoint(context.handle, &request)?;
+    let (size_bytes, digest) = wait_for_checkpoint(&request)?;
+    let path = request
+        .checkpoint_path
+        .as_deref()
+        .and_then(|path| path.to_str())
+        .ok_or_else(|| AgentError::Artifact("checkpoint path is not valid UTF-8".to_string()))?;
+    send_checkpoint_ack_blocking(
+        context.sender,
+        context.agent_id,
+        context.assignment,
+        path,
+        size_bytes,
+        &digest,
+        "checkpoint committed before host claim",
+    )?;
+    stop_and_report(context, "checkpoint committed before host claim")
 }
 
 fn stop_disconnected(context: &mut TaskContext<'_>) -> Result<(), AgentError> {

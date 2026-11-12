@@ -190,6 +190,7 @@ mod tests {
             workdir: None,
             output_path: None,
             policy: TaskPolicy::Stateless,
+            checkpoint_path: None,
         };
         let handle = runner.start(&spec).map_err(|error| error.to_string())?;
         assert!(matches!(

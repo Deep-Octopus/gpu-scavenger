@@ -10,6 +10,7 @@ impl TaskStore {
             Ok(TaskEventKind::TaskEventFailed) => (Some("queued"), true),
             Ok(TaskEventKind::TaskEventStopped) => (Some("queued"), true),
             Ok(TaskEventKind::TaskEventReleaseVerified) => (None, false),
+            Ok(TaskEventKind::TaskEventCheckpointed) => (None, false),
             Err(_) => (None, false),
         };
         let event_id = event_id(event);

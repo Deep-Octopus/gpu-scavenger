@@ -5,9 +5,9 @@ mod store;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use server::{ControllerService, TlsServerConfig};
-use store::TaskStore;
+use store::{EnqueueOptions, EnqueueTask, TaskStore};
 
 #[derive(Debug, Parser)]
 #[command(name = "scavenger-controller")]
@@ -15,6 +15,12 @@ use store::TaskStore;
 struct Cli {
     #[command(subcommand)]
     command: Command,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum TaskPolicyArg {
+    Stateless,
+    Checkpointed,
 }
 
 #[derive(Debug, Subcommand)]
@@ -48,6 +54,12 @@ enum Command {
         workdir: Option<String>,
         #[arg(long)]
         output_path: Option<String>,
+        #[arg(long, value_enum, default_value_t = TaskPolicyArg::Stateless)]
+        policy: TaskPolicyArg,
+        #[arg(long)]
+        checkpoint_path: Option<String>,
+        #[arg(long, default_value_t = 30_000)]
+        checkpoint_deadline_ms: u64,
     },
     List {
         #[arg(long, default_value = "/tmp/gpu-scavenger/controller.sqlite3")]
@@ -105,17 +117,37 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             arg,
             workdir,
             output_path,
+            policy,
+            checkpoint_path,
+            checkpoint_deadline_ms,
         } => {
             let store = TaskStore::open(db)?;
-            store.enqueue(
-                &task_id,
-                &device_uuid,
-                &program,
-                &arg,
-                workdir.as_deref(),
-                output_path.as_deref(),
-            )?;
-            println!("queued {task_id}");
+            let queued_id = task_id.clone();
+            if matches!(policy, TaskPolicyArg::Stateless) {
+                store.enqueue(
+                    &task_id,
+                    &device_uuid,
+                    &program,
+                    &arg,
+                    workdir.as_deref(),
+                    output_path.as_deref(),
+                )?;
+            } else {
+                store.enqueue_with_policy(EnqueueTask {
+                    task_id,
+                    device_uuid,
+                    program,
+                    args: arg,
+                    workdir,
+                    output_path,
+                    options: EnqueueOptions {
+                        policy: 1,
+                        checkpoint_path,
+                        checkpoint_deadline_ms,
+                    },
+                })?;
+            }
+            println!("queued {queued_id}");
         }
         Command::List { db } => {
             let store = TaskStore::open(db)?;

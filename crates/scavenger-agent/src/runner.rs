@@ -44,6 +44,12 @@ impl SystemdScopeRunner {
         if let Some(workdir) = &spec.workdir {
             args.push(format!("--working-directory={}", workdir.display()));
         }
+        if let Some(checkpoint_path) = &spec.checkpoint_path {
+            args.push(format!(
+                "--setenv=GPU_SCAVENGER_CHECKPOINT_PATH={}",
+                checkpoint_path.display()
+            ));
+        }
         for (key, value) in &spec.env {
             args.push(format!("--setenv={key}={value}"));
         }
@@ -90,6 +96,23 @@ impl SystemdScopeRunner {
             return Err(command_failure("systemctl stop", stop));
         }
         self.wait_for_child(handle)?;
+        Ok(())
+    }
+
+    pub fn request_checkpoint(
+        &mut self,
+        handle: &TaskHandle,
+        _request: &CheckpointRequest,
+    ) -> Result<(), RunnerError> {
+        let output = run_systemctl(&[
+            "kill",
+            "--kill-who=all",
+            "--signal=SIGUSR1",
+            &handle.unit_name,
+        ])?;
+        if !output.status.success() {
+            return Err(command_failure("systemctl checkpoint", output));
+        }
         Ok(())
     }
 
@@ -166,10 +189,10 @@ impl TaskRunner for SystemdScopeRunner {
 
     fn request_checkpoint(
         &mut self,
-        _handle: &TaskHandle,
-        _request: &CheckpointRequest,
+        handle: &TaskHandle,
+        request: &CheckpointRequest,
     ) -> Result<(), Self::Error> {
-        Err(RunnerError::CheckpointUnsupported)
+        self.request_checkpoint(handle, request)
     }
 
     fn hard_stop(&mut self, handle: &TaskHandle) -> Result<(), Self::Error> {

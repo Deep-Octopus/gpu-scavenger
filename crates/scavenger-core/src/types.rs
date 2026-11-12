@@ -115,6 +115,7 @@ pub struct TaskSpec {
     pub workdir: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
     pub policy: TaskPolicy,
+    pub checkpoint_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -129,6 +130,7 @@ pub struct CheckpointRequest {
     pub lease_epoch: u64,
     pub deadline_ms: u64,
     pub reason: String,
+    pub checkpoint_path: Option<PathBuf>,
 }
 
 pub trait TaskRunner: Send {

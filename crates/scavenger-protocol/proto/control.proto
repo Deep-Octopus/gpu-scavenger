@@ -80,6 +80,7 @@ enum TaskEventKind {
   TASK_EVENT_FAILED = 2;
   TASK_EVENT_STOPPED = 3;
   TASK_EVENT_RELEASE_VERIFIED = 4;
+  TASK_EVENT_CHECKPOINTED = 5;
 }
 
 message TaskEvent {

@@ -28,7 +28,14 @@ pub(crate) fn assignment_to_spec(assignment: &TaskAssignment) -> Result<TaskSpec
             .collect(),
         workdir: non_empty_path(&assignment.workdir),
         output_path: non_empty_path(&assignment.output_path),
-        policy: TaskPolicy::Stateless,
+        policy: if assignment.policy == 1 {
+            TaskPolicy::Checkpointed {
+                checkpoint_deadline_ms: assignment.checkpoint_deadline_ms.max(1_000),
+            }
+        } else {
+            TaskPolicy::Stateless
+        },
+        checkpoint_path: non_empty_path(&assignment.checkpoint_path),
     })
 }
 

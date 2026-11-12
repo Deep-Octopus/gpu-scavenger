@@ -1,5 +1,6 @@
 use scavenger_protocol::control::{
-    agent_message, AgentMessage, ClaimEvent, ResultCommit, TaskAssignment, TaskEvent, TaskEventKind,
+    agent_message, AgentMessage, CheckpointAck, ClaimEvent, ResultCommit, TaskAssignment,
+    TaskEvent, TaskEventKind,
 };
 use tokio::sync::mpsc;
 
@@ -67,6 +68,36 @@ pub(crate) fn send_result_commit_blocking(
                 output_path: assignment.output_path.clone(),
                 output_size_bytes,
                 digest: digest.to_string(),
+            })),
+        })
+        .map_err(|_| AgentError::ChannelClosed)
+}
+
+pub(crate) fn send_checkpoint_ack_blocking(
+    sender: &mpsc::Sender<AgentMessage>,
+    agent_id: &str,
+    assignment: &TaskAssignment,
+    checkpoint_path: &str,
+    size_bytes: u64,
+    digest: &str,
+    message: &str,
+) -> Result<(), AgentError> {
+    sender
+        .blocking_send(AgentMessage {
+            message: Some(agent_message::Message::CheckpointAck(CheckpointAck {
+                event_id: format!(
+                    "checkpoint:{}:{}",
+                    assignment.task_id, assignment.lease_epoch
+                ),
+                agent_id: agent_id.to_string(),
+                task_id: assignment.task_id.clone(),
+                lease_epoch: assignment.lease_epoch,
+                command_seq: assignment.command_seq,
+                checkpoint_path: checkpoint_path.to_string(),
+                size_bytes,
+                digest: digest.to_string(),
+                success: true,
+                message: message.to_string(),
             })),
         })
         .map_err(|_| AgentError::ChannelClosed)

@@ -87,7 +87,9 @@ fn assignment_from_task(task: &TaskRecord, command_seq: u64) -> TaskAssignment {
         env: task.env.clone().into_iter().collect(),
         workdir: task.workdir.clone().unwrap_or_default(),
         output_path: task.output_path.clone().unwrap_or_default(),
+        policy: task.policy,
+        checkpoint_path: task.checkpoint_path.clone().unwrap_or_default(),
+        checkpoint_deadline_ms: task.checkpoint_deadline_ms,
         command_seq,
-        ..Default::default()
     }
 }

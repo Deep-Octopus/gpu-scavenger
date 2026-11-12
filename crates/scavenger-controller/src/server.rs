@@ -275,7 +275,11 @@ impl ControllerState {
                 }
             }
             agent_message::Message::Claim(claim) => self.update_claim(agent_id, claim),
-            agent_message::Message::CheckpointAck(_) => {}
+            agent_message::Message::CheckpointAck(checkpoint) => {
+                if let Err(error) = self.store.record_checkpoint(&checkpoint) {
+                    eprintln!("checkpoint commit error: {error}");
+                }
+            }
             agent_message::Message::Hello(_) => {}
         }
     }

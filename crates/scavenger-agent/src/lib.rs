@@ -1,6 +1,7 @@
 pub mod agent;
 mod artifact;
 mod assignment;
+mod checkpoint;
 pub mod claim;
 mod connection;
 mod events;

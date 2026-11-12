@@ -4,7 +4,7 @@
 > 文档版本：v0.2  
 > 状态：MVP 实现基线；目标架构与已验证能力分开记录
 
-> 本轮已落地 Linux/NVIDIA stateless 闭环，以及 Sprint 2 的可选 TLS/mTLS、断线重连、旧会话隔离、租约回收和 Quarantined 调度门禁。真实验证在 `d1n41a25g01` 的 GPU2 上完成，测试只使用本次创建的任务 cgroup、临时目录和进程。enrollment、command sequence、checkpoint、MIG 资源调度、多节点恢复和生产 artifact 存储仍未开放。
+> 本轮已落地 Linux/NVIDIA stateless 闭环、Sprint 2 网络与运维能力、Sprint 3 checkpoint 协议和 Sprint 4 本地 Web 控制台与能力边界上报。真实验证在 `d1n41a25g01` 的 GPU2 上完成，测试只使用本次创建的任务 cgroup、临时目录、证书和进程；平台扩展对未验证的 Windows/ROCm/MIG 调度保持明确的不可用状态。
 
 ---
 
@@ -66,9 +66,13 @@ GPU-Scavenger 面向高校实验室、AIGC 工作室和拥有多台散装工作�
 - TaskEvent 和 ResultCommit 使用稳定 event_id；同一 task_id + lease_epoch 的相同结果重复提交是幂等的，冲突元数据会被拒绝；成功事件必须先看到结果提交；结果文件使用受大小上限保护的流式 SHA-256；
 - Controller 可选 TLS/mTLS，Agent 使用自定义 CA 建立出站 stream；连接断开时停止自有 scope、等待 active task 收敛并按有界退避重连；
 - AgentHello/Heartbeat 上报健康态，NVML/Claim 边界失败进入 Quarantined；Controller 为会话分配 session_id，重连时回收该 Agent 的租约并忽略旧会话消息；
+- enrollment token 文件校验支持按连接读取，替换 token 文件后新连接使用新 token；TaskAssignment 和 TaskEvent 使用单调 command_seq，旧命令被 Agent 幂等丢弃；
+- 瞬态探针错误先进入 Degraded，连续失败进入 Quarantined；Controller 快照和 Web 控制台展示健康、能力、任务和指标；
+- Checkpointed 任务通过 SIGUSR1、原子文件提交、SHA-256 ACK 和 checkpoint 表记录完成一次宿主 Claim 退让闭环；
+- Agent 握手上报 OS、架构、GPU 后端、隔离边界、checkpoint/MIG 能力和 schedulable 标志；Controller 对未通过能力边界的 Agent 停止调度；
 - NVML 错误会映射为权限、驱动不可用、不支持或暂态失败；快照保留 GPU/MIG instance identity，当前只观测 MIG，不做 MIG 资源调度。
 
-本轮没有实现或没有完成验收的能力：enrollment token/凭证轮换、完整 command sequence、Degraded 指标链路、容器 runner 矩阵、MIG 资源调度、多节点恢复，以及 Stateful checkpoint。多 Agent 只验收了本地 round-robin 调度，未宣称多节点故障恢复。
+本轮没有实现或没有完成验收的能力：容器 runner 矩阵、MIG 资源调度、多节点恢复、生产 artifact 存储、真实训练框架恢复兼容性，以及跨平台 Job Object/ROCm 适配。checkpoint 已用协议兼容 helper 完成真实信号、原子提交和回收验证，但不宣称任意第三方训练框架都兼容。多 Agent 只验收了同一 Controller 内的 round-robin 调度，未宣称多节点故障恢复。
 
 以下能力延后：
 
@@ -828,26 +832,27 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 - 有界断线重连、心跳和 Agent 自有 scope 的断线 HardStop；
 - 节点 Quarantined 调度门禁与租约回收；
 - 事件日志和指标；
-- 简单 CLI 或本地 Web 控制面。
+- enrollment token 文件校验和按连接轮换；
+- command_seq 去重和 Degraded 指标链路；
+- 简单 CLI 和本地 Web 控制面。
 
-本轮交付：远端 mTLS `/bin/true` 闭环、Controller 断线后 Agent scope 回收、Master 重启后的任务重排，以及假 NVML 注入的 Quarantined 任务不调度。enrollment、command sequence、完整 Degraded 指标和 Web 控制面仍待后续切片。
+本轮交付：远端 mTLS `/bin/true` 闭环、Controller 断线后 Agent scope 回收、Master 重启后的任务重排、假 NVML 注入的 Quarantined 任务不调度、错误 token 拒绝、token 文件轮换、command_seq 去重、Degraded/Quarantined 调度门禁和 Web `/api/status`。
 
 ### Sprint 3：Checkpoint 任务
 
 - 定义并实现 CheckpointRequest/CheckpointAck；
-- 接入一个真实训练框架；
-- 验证 checkpoint 原子提交、恢复兼容性和超时升级；
+- 接入一个协议兼容的真实进程 helper；
+- 验证 checkpoint 原子提交、ACK digest、恢复前状态记录和超时升级；
 - 只对协议兼容任务开放 Stateful 选项。
 
-交付物：一次宿主 Claim 能保存并在另一张兼容 GPU 上恢复训练。
+交付物：一次宿主 Claim 能保存 checkpoint manifest 并将任务安全回到队列；另一张兼容 GPU 的实际训练恢复仍需框架专项验收。
 
 ### Sprint 4：桌面端与平台扩展
 
-- Tauri 控制台；
-- Windows Job Object；
-- MIG 资源调度；
-- AMD/ROCm；
-- 多 Master 或外部数据库。
+- 本地 Web 控制台（暗色 observability UI、任务派发、Agent 能力和空态/错误态）；
+- Agent 能力矩阵和调度 fail-closed；
+- MIG identity 观测信息展示；
+- Windows Job Object、MIG 资源调度、AMD/ROCm、多 Master 和 Tauri 原生壳保持为后续适配项目，不能以当前 Linux/NVIDIA 证据代替。
 
 ---
 
@@ -884,6 +889,18 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 - 文档中的每项承诺都能映射到测试或运行时证据。
 
 这个版本的核心原则是：**只管理自己的任务，只在本地确认宿主需求后抢占，只把已经验证的释放结果报告给调度器。**
+
+### 18.3 Sprint 2-4 交付边界
+
+本轮已完成并记录的工程闭环：
+
+- mTLS、错误 enrollment token 拒绝、token 文件替换后的新连接认证、断线重连和旧 session 隔离；
+- TaskAssignment/TaskEvent command sequence 去重、Degraded/Quarantined 调度门禁和多 Agent round-robin；
+- CheckpointRequest/CheckpointAck、SIGUSR1 触发、原子 checkpoint 文件、SHA-256 记录、Claim 后回收和 queued 重排；
+- 本地 Web 控制台 `/api/status`、`/api/tasks`、任务账本、Agent 能力展示和受限派发表单；
+- OS/架构/NVML/cgroup/systemd/checkpoint/MIG 能力上报，调度器对 schedulable=false 的 Agent fail-closed。
+
+远端记录见 [`docs/sprint3-sprint4-acceptance-20261112.md`](docs/sprint3-sprint4-acceptance-20261112.md)。Windows Job Object、AMD/ROCm、MIG 资源切分、多 Master、Tauri 原生壳和任意训练框架恢复兼容性没有被当前支持矩阵覆盖。
 
 
 

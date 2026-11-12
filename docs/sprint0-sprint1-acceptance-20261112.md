@@ -67,6 +67,6 @@ scope 已回收，GPU2 最终为 2 MiB。重复提交和冲突提交的精确行
 
 测试结束后只停止了本次创建的 Controller、Agent 和 systemd scope；活动自有 scope、Agent 进程、Claim 文件和 GPU2 外部进程均为空。远端保留 `/root/gpu-scavenger-mvp-run-20261112/` 作为可审计日志、DB、helper 和二进制证据，临时源码构建目录和私有 rustup 目录在记录完成后删除。smoke 期间 GPU3 出现了外部 PID `2597197`、约 21774 MiB 的占用；本项目没有对 GPU3 执行任务、Claim、PID 或驱动操作，后续记录不把它归因于本项目。
 
-Sprint 2 的 TLS/mTLS、断线重连、旧会话隔离、租约回收和 Quarantined 调度门禁已在独立记录中完成；本记录保留为 Sprint 0/1 的历史边界证据。仍未交付：enrollment token/凭证轮换、完整 command sequence、Degraded 指标链路、容器 runner 矩阵、MIG 资源调度、多节点恢复、Stateful checkpoint 和 artifact 存储协议。
+Sprint 2 的 TLS/mTLS、断线重连、旧会话隔离、租约回收和 Quarantined 调度门禁已在独立记录中完成；本记录保留为 Sprint 0/1 的历史边界证据。Sprint 2-4 的后续实现与边界见 [`docs/sprint3-sprint4-acceptance-20261112.md`](sprint3-sprint4-acceptance-20261112.md)。
 
 Sprint 2 远端验收见 [`docs/sprint2-acceptance-20261112.md`](sprint2-acceptance-20261112.md)。

@@ -9,7 +9,9 @@
 - Controller 支持可选 TLS；配置 `--tls-client-ca` 时要求客户端证书，形成 mTLS。Agent 支持 CA、客户端证书、私钥和 TLS domain 参数。
 - Agent 使用有界重连退避（250ms 起，最多 5s）。连接关闭会先把自己的执行 scope 停掉，等待 active task 结束，再建立下一条会话。
 - Controller 为每个 Agent 分配 session_id。新 Hello 会回收该 Agent 的 leased/running 任务；旧会话的消息和 unregister 不会修改新会话。
-- AgentHello/AgentHeartbeat 携带 `AgentHealth`。NVML 初始化、inventory、snapshot 或 Claim 读取失败时进入 `AGENT_QUARANTINED`，Controller 调度器跳过隔离 Agent。
+- AgentHello/AgentHeartbeat 携带 `AgentHealth`。NVML 初始化、inventory、snapshot 或 Claim 读取失败时进入 `AGENT_QUARANTINED`；连续暂态探针失败先进入 `AGENT_DEGRADED`，Controller 对两种非 Ready 状态都停止调度。
+- AgentHello 携带 enrollment token 和能力报告；Controller 按连接读取 token 文件，错误 token 被拒绝，替换 token 文件后新连接使用新 token。
+- TaskAssignment/TaskEvent 携带单调 `command_seq`；Agent 对重复或过期命令幂等忽略。
 - ResultCommit 使用流式 SHA-256，单文件上限 64 GiB，并检查文件在摘要期间没有变化。
 
 ## 本地门禁
@@ -79,6 +81,6 @@ sprint02-quarantine-task queued GPU-524bcc1c-f383-b658-a36d-983fa7efc56c /bin/tr
 
 只读 GPU 进程快照仍包含其他任务的外部 PID（包括 PID `2597197`、约 21774 MiB 的进程，以及两个约 69704 MiB 的进程）。本轮没有对这些 GPU、PID、Claim 或驱动执行操作。
 
-## 尚未交付
+## 后续边界
 
-本轮没有实现 enrollment token/凭证轮换、完整 command sequence、Degraded 指标链路、容器 runner 矩阵、MIG 资源调度、多节点恢复、Stateful checkpoint 或 artifact 存储协议。TLS 证书仅用于验收，生产部署仍需要正式 PKI 和 enrollment 流程。
+Stateful checkpoint、容器 runner 矩阵、MIG 资源调度、多节点恢复和生产 artifact 存储不属于本记录；Sprint 3/4 的实现和远端证据见 [`sprint3-sprint4-acceptance-20261112.md`](sprint3-sprint4-acceptance-20261112.md)。TLS 证书仅用于验收，生产部署仍需要正式 PKI 和 enrollment 流程。

@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package scavenger.v1;
+
+service Control {
+  rpc OpenStream(stream AgentMessage) returns (stream MasterMessage);
+}
+
+message AgentMessage {
+  oneof message {
+    AgentHello hello = 1;
+    AgentHeartbeat heartbeat = 2;
+    TaskEvent task_event = 3;
+    ClaimEvent claim = 4;
+    ResultCommit result_commit = 5;
+  }
+}
+
+message MasterMessage {
+  oneof message {
+    Welcome welcome = 1;
+    TaskAssignment task = 2;
+  }
+}
+
+message AgentHello {
+  string agent_id = 1;
+  repeated Device devices = 2;
+  AgentHealth health = 3;
+  string health_reason = 4;
+}
+
+message Device {
+  string uuid = 1;
+  uint64 total_memory_bytes = 2;
+}
+
+message DeviceState {
+  string uuid = 1;
+  uint64 free_memory_bytes = 2;
+  uint32 process_count = 3;
+}
+
+message AgentHeartbeat {
+  string agent_id = 1;
+  uint64 monotonic_ms = 2;
+  repeated DeviceState devices = 3;
+  AgentHealth health = 4;
+  string health_reason = 5;
+}
+
+enum AgentHealth {
+  AGENT_HEALTH_UNSPECIFIED = 0;
+  AGENT_HEALTHY = 1;
+  AGENT_QUARANTINED = 2;
+}
+
+message TaskAssignment {
+  string task_id = 1;
+  uint64 lease_epoch = 2;
+  string device_uuid = 3;
+  string program = 4;
+  repeated string args = 5;
+  map<string, string> env = 6;
+  string workdir = 7;
+  string output_path = 8;
+}
+
+enum TaskEventKind {
+  TASK_EVENT_STARTED = 0;
+  TASK_EVENT_SUCCEEDED = 1;
+  TASK_EVENT_FAILED = 2;
+  TASK_EVENT_STOPPED = 3;
+  TASK_EVENT_RELEASE_VERIFIED = 4;
+}
+
+message TaskEvent {
+  string agent_id = 1;
+  string task_id = 2;
+  uint64 lease_epoch = 3;
+  TaskEventKind kind = 4;
+  string message = 5;
+  string output_path = 6;
+  string event_id = 7;
+}
+
+message ResultCommit {
+  string event_id = 1;
+  string agent_id = 2;
+  string task_id = 3;
+  uint64 lease_epoch = 4;
+  string output_path = 5;
+  uint64 output_size_bytes = 6;
+  string digest = 7;
+}
+
+message ClaimEvent {
+  string agent_id = 1;
+  string device_uuid = 2;
+  bool active = 3;
+  string reason = 4;
+}
+
+message Welcome {
+  string agent_id = 1;
+  uint64 heartbeat_interval_ms = 2;
+}

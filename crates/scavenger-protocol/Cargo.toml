@@ -1,0 +1,15 @@
+[package]
+name = "scavenger-protocol"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+build = "build.rs"
+
+[dependencies]
+prost.workspace = true
+tonic.workspace = true
+
+[build-dependencies]
+protoc-bin-vendored = "3.3.0"
+tonic-build.workspace = true

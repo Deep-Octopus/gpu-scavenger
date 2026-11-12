@@ -5,6 +5,7 @@ pub mod claim;
 mod connection;
 mod events;
 mod execution;
+mod health;
 pub mod probe;
 mod release;
 pub mod runner;

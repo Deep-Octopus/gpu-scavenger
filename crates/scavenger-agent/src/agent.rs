@@ -11,11 +11,10 @@ use tonic::Request;
 
 use crate::claim::ClaimFile;
 pub use crate::connection::AgentTlsConfig;
-use crate::connection::{
-    current_probe, endpoint, hello, initialize_probe, spawn_heartbeat, SharedProbeRuntime,
-};
+use crate::connection::{endpoint, hello, spawn_heartbeat};
 use crate::events::send_task_event;
 use crate::execution::{execute_task, ExecutionContext};
+use crate::health::{current_probe, initialize_probe, SharedProbeRuntime};
 
 #[derive(Debug, Clone)]
 pub struct AgentConfig {

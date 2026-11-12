@@ -53,6 +53,10 @@ enum Command {
         #[arg(long, default_value = "/tmp/gpu-scavenger/controller.sqlite3")]
         db: PathBuf,
     },
+    Status {
+        #[arg(long, default_value = "/tmp/gpu-scavenger/controller.sqlite3")]
+        db: PathBuf,
+    },
 }
 
 #[tokio::main]
@@ -121,6 +125,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     task.task_id, task.status, task.device_uuid, task.program
                 );
             }
+        }
+        Command::Status { db } => {
+            let store = TaskStore::open(db)?;
+            let service = ControllerService::new(store);
+            let snapshot = service.snapshot().map_err(std::io::Error::other)?;
+            println!("{}", serde_json::to_string_pretty(&snapshot)?);
         }
     }
     Ok(())

@@ -49,6 +49,7 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 claim_active: false,
                 quarantined: false,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )
@@ -64,6 +65,7 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 claim_active: false,
                 quarantined: false,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )
@@ -109,6 +111,7 @@ fn scheduler_waits_for_release_verified_before_reusing_agent(
                 claim_active: false,
                 quarantined: false,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )
@@ -171,6 +174,7 @@ fn scheduler_skips_quarantined_agents() -> Result<(), Box<dyn std::error::Error 
                 claim_active: false,
                 quarantined: true,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )
@@ -203,6 +207,7 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 claim_active: false,
                 quarantined: false,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )
@@ -219,6 +224,7 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 claim_active: false,
                 quarantined: false,
                 degraded: false,
+                health_reason: String::new(),
                 next_command_seq: 0,
             },
         )

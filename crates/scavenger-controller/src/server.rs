@@ -17,6 +17,9 @@ use crate::auth::EnrollmentGuard;
 use crate::store::{TaskRecord, TaskStore};
 
 mod scheduler;
+mod snapshot;
+
+pub use snapshot::ControllerSnapshot;
 
 type Outbound = mpsc::Sender<Result<MasterMessage, Status>>;
 
@@ -48,6 +51,7 @@ struct AgentHandle {
     claim_active: bool,
     quarantined: bool,
     degraded: bool,
+    health_reason: String,
     next_command_seq: u64,
 }
 
@@ -166,6 +170,7 @@ impl Control for ControllerService {
                             || x == AgentHealth::AgentDegraded as i32
                     ),
                     degraded: hello.health == AgentHealth::AgentDegraded as i32,
+                    health_reason: hello.health_reason.clone(),
                     next_command_seq: 0,
                 },
             )
@@ -254,7 +259,7 @@ impl ControllerState {
                     eprintln!("heartbeat renewal error: {error}");
                 }
                 self.update_devices(agent_id, heartbeat.devices);
-                self.update_health(agent_id, heartbeat.health);
+                self.update_health(agent_id, heartbeat.health, heartbeat.health_reason);
             }
             agent_message::Message::TaskEvent(event) => {
                 if let Err(error) = self.store.record_event(&event) {
@@ -291,7 +296,7 @@ impl ControllerState {
         }
     }
 
-    fn update_health(&self, agent_id: &str, health: i32) {
+    fn update_health(&self, agent_id: &str, health: i32, reason: String) {
         if let Ok(mut agents) = self.agents.lock() {
             if let Some(agent) = agents.get_mut(agent_id) {
                 agent.quarantined = !matches!(
@@ -300,8 +305,13 @@ impl ControllerState {
                         || x == AgentHealth::AgentDegraded as i32
                 );
                 agent.degraded = health == AgentHealth::AgentDegraded as i32;
+                agent.health_reason = reason;
             }
         }
+    }
+
+    pub(super) fn snapshot(&self) -> Result<ControllerSnapshot, String> {
+        snapshot::build(self)
     }
 
     pub(super) fn next_command_seq(&self, agent_id: &str) -> Option<u64> {
@@ -318,6 +328,12 @@ impl ControllerState {
                 agent.busy = busy;
             }
         }
+    }
+}
+
+impl ControllerService {
+    pub fn snapshot(&self) -> Result<ControllerSnapshot, String> {
+        self.state.snapshot()
     }
 }
 

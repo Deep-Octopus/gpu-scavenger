@@ -182,8 +182,7 @@ open -n "target/release/bundle/macos/GPU Scavenger.app" --args \
   --controller-url http://127.0.0.1:18082
 ```
 
-The current release page includes a macOS Apple Silicon `.app` archive when a
-desktop build is available.
+The v0.1.0 release includes a macOS Apple Silicon `.app` archive.
 
 ## Security and ownership model
 

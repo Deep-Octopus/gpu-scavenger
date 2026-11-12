@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -8,7 +10,7 @@ use scavenger_protocol::control::{
     agent_message, control_server::Control, AgentCapabilities, AgentHealth, AgentMessage,
     ClaimEvent, DeviceState, MasterMessage, TaskEvent, Welcome,
 };
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::transport::{Certificate, Identity, ServerTlsConfig};
 use tonic::{Request, Response, Status, Streaming};
@@ -96,27 +98,99 @@ impl ControllerService {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let scheduler = self.clone();
         tokio::spawn(async move { scheduler.run_scheduler().await });
-        if let Some(tls) = tls {
-            let certificate = std::fs::read(tls.certificate)?;
-            let private_key = std::fs::read(tls.private_key)?;
-            let identity = Identity::from_pem(certificate, private_key);
-            let mut tls_config = ServerTlsConfig::new().identity(identity);
-            if let Some(client_ca) = tls.client_ca {
-                let ca = std::fs::read(client_ca)?;
-                tls_config = tls_config.client_ca_root(Certificate::from_pem(ca));
-            }
-            return tonic::transport::Server::builder()
-                .tls_config(tls_config)?
-                .add_service(scavenger_protocol::control::control_server::ControlServer::new(self))
-                .serve(address)
-                .await
-                .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>);
+        match tls {
+            Some(tls) => serve_tls(self, address, tls).await,
+            None => serve_plain(self, address).await,
         }
-        tonic::transport::Server::builder()
-            .add_service(scavenger_protocol::control::control_server::ControlServer::new(self))
-            .serve(address)
-            .await
-            .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
+    }
+}
+
+type ShutdownSignal = Pin<Box<dyn Future<Output = ()> + Send>>;
+
+async fn serve_plain(
+    service: ControllerService,
+    address: SocketAddr,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    tonic::transport::Server::builder()
+        .add_service(scavenger_protocol::control::control_server::ControlServer::new(service))
+        .serve(address)
+        .await
+        .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
+}
+
+async fn serve_tls(
+    service: ControllerService,
+    address: SocketAddr,
+    tls: TlsServerConfig,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    #[cfg(unix)]
+    {
+        let mut reload = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())?;
+        loop {
+            let (shutdown_sender, shutdown_receiver) = oneshot::channel();
+            let server_service = service.clone();
+            let server_tls = tls.clone();
+            let mut server = tokio::spawn(async move {
+                serve_tls_once(
+                    server_service,
+                    address,
+                    server_tls,
+                    Box::pin(async move {
+                        let _ = shutdown_receiver.await;
+                    }),
+                )
+                .await
+            });
+            tokio::select! {
+                result = &mut server => return join_server(result),
+                _ = reload.recv() => {
+                    let _ = shutdown_sender.send(());
+                    join_server(server.await)?;
+                }
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        serve_tls_once(service, address, tls, Box::pin(std::future::pending())).await
+    }
+}
+
+async fn serve_tls_once(
+    service: ControllerService,
+    address: SocketAddr,
+    tls: TlsServerConfig,
+    shutdown: ShutdownSignal,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let tls_config = load_tls_config(&tls)?;
+    tonic::transport::Server::builder()
+        .tls_config(tls_config)?
+        .add_service(scavenger_protocol::control::control_server::ControlServer::new(service))
+        .serve_with_shutdown(address, shutdown)
+        .await
+        .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
+}
+
+fn load_tls_config(
+    tls: &TlsServerConfig,
+) -> Result<ServerTlsConfig, Box<dyn std::error::Error + Send + Sync>> {
+    let certificate = std::fs::read(&tls.certificate)?;
+    let private_key = std::fs::read(&tls.private_key)?;
+    let identity = Identity::from_pem(certificate, private_key);
+    let mut tls_config = ServerTlsConfig::new().identity(identity);
+    if let Some(client_ca) = &tls.client_ca {
+        let ca = std::fs::read(client_ca)?;
+        tls_config = tls_config.client_ca_root(Certificate::from_pem(ca));
+    }
+    Ok(tls_config)
+}
+
+fn join_server(
+    result: Result<Result<(), Box<dyn std::error::Error + Send + Sync>>, tokio::task::JoinError>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    match result {
+        Ok(result) => result,
+        Err(error) => Err(Box::new(error)),
     }
 }
 

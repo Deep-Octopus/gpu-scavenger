@@ -4,7 +4,8 @@ use super::{AgentHandle, ControllerService};
 use crate::store::TaskStore;
 use scavenger_protocol::control::master_message::Message;
 use scavenger_protocol::control::{
-    agent_message, AgentHealth, AgentMessage, ClaimEvent, DeviceState, TaskEvent, TaskEventKind,
+    agent_message, AgentCapabilities, AgentHealth, AgentMessage, ClaimEvent, DeviceState,
+    TaskEvent, TaskEventKind,
 };
 use tokio::sync::mpsc;
 
@@ -25,6 +26,19 @@ fn test_path(name: &str) -> PathBuf {
             .map(|value| value.as_nanos())
             .unwrap_or(0)
     ))
+}
+
+fn capabilities() -> AgentCapabilities {
+    AgentCapabilities {
+        operating_system: "linux".to_string(),
+        architecture: "x86_64".to_string(),
+        gpu_backend: "nvidia-nvml".to_string(),
+        isolation: "systemd-cgroup-v2".to_string(),
+        checkpoint: "sigusr1-file-ack".to_string(),
+        mig: "observed-only".to_string(),
+        schedulable: true,
+        reason: String::new(),
+    }
 }
 
 #[test]
@@ -50,7 +64,7 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 quarantined: false,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )
@@ -67,7 +81,7 @@ fn scheduler_round_robins_ready_agents_without_duplicate_leases(
                 quarantined: false,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )
@@ -114,7 +128,7 @@ fn scheduler_waits_for_release_verified_before_reusing_agent(
                 quarantined: false,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )
@@ -178,7 +192,7 @@ fn scheduler_skips_quarantined_agents() -> Result<(), Box<dyn std::error::Error 
                 quarantined: true,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )
@@ -212,7 +226,7 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 quarantined: false,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )
@@ -230,7 +244,7 @@ fn stale_session_messages_do_not_mutate_replaced_agent(
                 quarantined: false,
                 degraded: false,
                 health_reason: String::new(),
-                capabilities: Default::default(),
+                capabilities: capabilities(),
                 next_command_seq: 0,
             },
         )

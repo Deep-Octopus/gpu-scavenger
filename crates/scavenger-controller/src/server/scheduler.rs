@@ -62,7 +62,12 @@ impl ControllerState {
             let Some(agent) = agents.get_mut(agent_id) else {
                 continue;
             };
-            if agent.busy || agent.claim_active || agent.quarantined || agent.degraded {
+            if agent.busy
+                || agent.claim_active
+                || agent.quarantined
+                || agent.degraded
+                || !agent.capabilities.schedulable
+            {
                 continue;
             }
             agent.busy = true;

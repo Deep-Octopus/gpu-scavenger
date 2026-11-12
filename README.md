@@ -12,6 +12,24 @@ cargo test --workspace
 
 The workspace builds on macOS for development and protocol/UI work. Running the GPU Agent requires Linux, NVIDIA NVML, cgroup v2 and systemd scopes; an unsupported host reports `schedulable=false` and does not receive tasks.
 
+## Run the macOS desktop app
+
+The native shell starts a local Controller database under the macOS application data directory, chooses an available loopback port for the embedded console, and reuses the same operator UI. Port `18080` is not required.
+
+```bash
+cd apps/scavenger-desktop
+npx --yes @tauri-apps/cli@2.12.4 dev
+```
+
+To build the application bundle:
+
+```bash
+npx --yes @tauri-apps/cli@2.12.4 build --bundles app
+open ../../target/release/bundle/macos/GPU\ Scavenger.app
+```
+
+The desktop shell is the operator surface; GPU workloads still run on enrolled Linux/NVIDIA Agents.
+
 ## Run the controller
 
 ```bash

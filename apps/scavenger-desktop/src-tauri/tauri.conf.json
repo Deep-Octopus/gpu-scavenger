@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GPU Scavenger",
+  "version": "0.1.0",
+  "identifier": "com.gpu-scavenger.desktop",
+  "build": {
+    "frontendDist": "../../../crates/scavenger-controller/web"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "category": "Utility",
+    "shortDescription": "Local GPU task operator console",
+    "icon": ["icons/icon.png"]
+  }
+}

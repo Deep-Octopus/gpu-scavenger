@@ -1,0 +1,16 @@
+[package]
+name = "scavenger-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Native macOS shell for the GPU Scavenger operator console"
+build = "build.rs"
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+scavenger-controller = { path = "../../../crates/scavenger-controller" }
+tauri.workspace = true
+tokio.workspace = true

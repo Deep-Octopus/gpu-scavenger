@@ -4,7 +4,7 @@
 > 文档版本：v0.2  
 > 状态：MVP 实现基线；目标架构与已验证能力分开记录
 
-> 本轮已落地 Linux/NVIDIA stateless 闭环、Sprint 2 网络与运维能力、Sprint 3 checkpoint 协议和 Sprint 4 本地 Web 控制台与能力边界上报。真实验证在 `d1n41a25g01` 的 GPU2 上完成，测试只使用本次创建的任务 cgroup、临时目录、证书和进程；平台扩展对未验证的 Windows/ROCm/MIG 调度保持明确的不可用状态。
+> 本轮已落地 Linux/NVIDIA stateless 闭环、Sprint 2 网络与运维能力、Sprint 3 checkpoint 协议和 Sprint 4 本地 Web/Tauri 控制台与能力边界上报。真实验证在 `d1n41a25g01` 的 GPU2 上完成，测试只使用本次创建的任务 cgroup、临时目录、证书和进程；平台扩展对未验证的 Windows/ROCm/MIG 调度保持明确的不可用状态。
 
 ---
 
@@ -71,6 +71,7 @@ GPU-Scavenger 面向高校实验室、AIGC 工作室和拥有多台散装工作�
 - Checkpointed 任务通过 SIGUSR1、原子文件提交、SHA-256 ACK 和 checkpoint 表记录完成一次宿主 Claim 退让闭环；
 - Agent 握手上报 OS、架构、GPU 后端、隔离边界、checkpoint/MIG 能力和 schedulable 标志；Controller 对未通过能力边界的 Agent 停止调度；
 - NVML 错误会映射为权限、驱动不可用、不支持或暂态失败；快照保留 GPU/MIG instance identity，当前只观测 MIG，不做 MIG 资源调度。
+- macOS Tauri 原生壳嵌入同一 Controller Web 控制台，使用应用数据目录和动态 loopback 端口；桌面端自身不宣称 GPU Agent 可调度。
 
 本轮没有实现或没有完成验收的能力：容器 runner 矩阵、MIG 资源调度、多节点恢复、生产 artifact 存储、真实训练框架恢复兼容性，以及跨平台 Job Object/ROCm 适配。checkpoint 已用协议兼容 helper 完成真实信号、原子提交和回收验证，但不宣称任意第三方训练框架都兼容。多 Agent 只验收了同一 Controller 内的 round-robin 调度，未宣称多节点故障恢复。
 
@@ -852,7 +853,8 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 - 本地 Web 控制台（暗色 observability UI、任务派发、Agent 能力和空态/错误态）；
 - Agent 能力矩阵和调度 fail-closed；
 - MIG identity 观测信息展示；
-- Windows Job Object、MIG 资源调度、AMD/ROCm、多 Master 和 Tauri 原生壳保持为后续适配项目，不能以当前 Linux/NVIDIA 证据代替。
+- macOS Tauri 原生壳，复用现有控制台并通过动态 loopback 端口启动本地 Controller；
+- Windows Job Object、MIG 资源调度、AMD/ROCm 和多 Master 保持为后续适配项目，不能以当前 Linux/NVIDIA 证据代替。
 
 ---
 
@@ -899,9 +901,10 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 - TaskAssignment/TaskEvent command sequence 去重、Degraded/Quarantined 调度门禁和多 Agent round-robin；
 - CheckpointRequest/CheckpointAck、SIGUSR1 触发、原子 checkpoint 文件、SHA-256 记录、Claim 后回收和 queued 重排；
 - 本地 Web 控制台 `/api/status`、`/api/tasks`、任务账本、Agent 能力展示和受限派发表单；
+- macOS Tauri `.app` 原生壳：启动后显示同一控制台，刷新可读 Controller live 状态，端口不依赖 `18080`；
 - OS/架构/NVML/cgroup/systemd/checkpoint/MIG 能力上报，调度器对 schedulable=false 的 Agent fail-closed。
 
-远端记录见 [`docs/sprint3-sprint4-acceptance-20261112.md`](docs/sprint3-sprint4-acceptance-20261112.md)。Windows Job Object、AMD/ROCm、MIG 资源切分、多 Master、Tauri 原生壳和任意训练框架恢复兼容性没有被当前支持矩阵覆盖。
+远端记录见 [`docs/sprint3-sprint4-acceptance-20261112.md`](docs/sprint3-sprint4-acceptance-20261112.md)。Windows Job Object、AMD/ROCm、MIG 资源切分、多 Master 和任意训练框架恢复兼容性没有被当前支持矩阵覆盖。
 
 
 

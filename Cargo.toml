@@ -5,6 +5,7 @@ members = [
     "crates/scavenger-protocol",
     "crates/scavenger-agent",
     "crates/scavenger-controller",
+    "apps/scavenger-desktop/src-tauri",
 ]
 
 [workspace.package]
@@ -25,6 +26,8 @@ sha2 = "0.10.9"
 thiserror = "2.0.21"
 tokio = { version = "1.41.1", features = ["macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }
 tokio-stream = "0.1.16"
+tauri = "2.8.5"
+tauri-build = "2.3.1"
 tonic = { version = "0.12.3", features = ["tls"] }
 tonic-build = "0.12.3"
 tracing = "0.1.41"

@@ -1,6 +1,7 @@
 mod auth;
 mod server;
 mod store;
+mod web;
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -38,6 +39,8 @@ enum Command {
         tls_client_ca: Option<PathBuf>,
         #[arg(long)]
         enrollment_token_file: Option<PathBuf>,
+        #[arg(long)]
+        web_listen: Option<SocketAddr>,
     },
     Enqueue {
         #[arg(long, default_value = "/tmp/gpu-scavenger/controller.sqlite3")]
@@ -89,6 +92,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             tls_key,
             tls_client_ca,
             enrollment_token_file,
+            web_listen,
         } => {
             if tls_cert.is_some() != tls_key.is_some() {
                 return Err("--tls-cert and --tls-key must be provided together".into());
@@ -104,10 +108,17 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     private_key,
                     client_ca: tls_client_ca,
                 });
-            ControllerService::new(store)
-                .with_enrollment_token_file(enrollment_token_file)
-                .serve(listen, tls)
-                .await?;
+            let service =
+                ControllerService::new(store).with_enrollment_token_file(enrollment_token_file);
+            if let Some(web_listen) = web_listen {
+                let web_service = service.clone();
+                tokio::spawn(async move {
+                    if let Err(error) = web::serve(web_service, web_listen).await {
+                        eprintln!("web console error: {error}");
+                    }
+                });
+            }
+            service.serve(listen, tls).await?;
         }
         Command::Enqueue {
             db,

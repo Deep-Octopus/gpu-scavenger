@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Scavenger Control</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail" aria-label="Primary navigation">
+        <div class="wordmark">
+          <span class="mark" aria-hidden="true"></span>
+          <span>SCAVENGER</span>
+        </div>
+        <p class="rail-kicker">GPU RESOURCE CONTROL</p>
+        <nav>
+          <a class="nav-link is-active" href="#overview">Overview</a>
+          <a class="nav-link" href="#agents">Agents</a>
+          <a class="nav-link" href="#tasks">Tasks</a>
+          <a class="nav-link" href="#compose">Dispatch</a>
+        </nav>
+        <div class="rail-note">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>Local operator surface</span>
+        </div>
+      </aside>
+
+      <main class="main" id="overview">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">CONTROL PLANE / LIVE</p>
+            <h1>Resource picture</h1>
+          </div>
+          <div class="topbar-state" id="connection-state" data-state="loading">
+            <span class="state-dot" aria-hidden="true"></span>
+            <span>Connecting</span>
+          </div>
+        </header>
+
+        <section class="metrics" aria-label="Task metrics">
+          <article class="metric metric-accent">
+            <span class="metric-label">Queued</span>
+            <strong id="metric-queued">—</strong>
+            <span class="metric-foot">awaiting a healthy device</span>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Running</span>
+            <strong id="metric-running">—</strong>
+            <span class="metric-foot">owned scopes</span>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Succeeded</span>
+            <strong id="metric-succeeded">—</strong>
+            <span class="metric-foot">durable outcomes</span>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Agents</span>
+            <strong id="metric-agents">—</strong>
+            <span class="metric-foot">ready / degraded / quarantined</span>
+          </article>
+        </section>
+
+        <section class="workbench" id="agents">
+          <div class="panel panel-agents">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">NODES</p>
+                <h2>Agent health</h2>
+              </div>
+              <span class="panel-meta" id="agent-count">0 connected</span>
+            </div>
+            <div class="agent-list" id="agent-list">
+              <div class="skeleton-row" aria-label="Loading agents"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+
+          <div class="panel panel-dispatch" id="compose">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">DISPATCH</p>
+                <h2>Place a task</h2>
+              </div>
+              <span class="panel-meta">bounded input</span>
+            </div>
+            <form id="task-form" class="task-form">
+              <label>
+                Task ID
+                <input name="task_id" required maxlength="128" placeholder="train-shard-01" />
+              </label>
+              <label>
+                GPU UUID
+                <input name="device_uuid" required placeholder="GPU-..." />
+              </label>
+              <label class="wide">
+                Executable
+                <input name="program" required placeholder="/usr/local/bin/train" />
+              </label>
+              <label class="wide">
+                Arguments <span class="label-muted">one per line</span>
+                <textarea name="args" rows="3" placeholder="--epochs&#10;10"></textarea>
+              </label>
+              <label>
+                Policy
+                <select name="policy">
+                  <option value="stateless">Stateless</option>
+                  <option value="checkpointed">Checkpointed</option>
+                </select>
+              </label>
+              <label>
+                Checkpoint path
+                <input name="checkpoint_path" placeholder="/run/scavenger/checkpoint.bin" />
+              </label>
+              <button type="submit">Queue task <span aria-hidden="true">↗</span></button>
+              <p class="form-message" id="form-message" role="status"></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel task-panel" id="tasks">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">DURABLE QUEUE</p>
+              <h2>Task ledger</h2>
+            </div>
+            <button class="quiet-button" id="refresh-button" type="button">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>State</th>
+                  <th>Device</th>
+                  <th>Lease</th>
+                  <th>Program</th>
+                </tr>
+              </thead>
+              <tbody id="task-list">
+                <tr><td colspan="5" class="table-message">Waiting for controller state…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <p class="footer-note">State is read from the controller’s SQLite WAL store. Actions are scoped to the selected task and device.</p>
+      </main>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

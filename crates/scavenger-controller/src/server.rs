@@ -14,7 +14,7 @@ use tonic::transport::{Certificate, Identity, ServerTlsConfig};
 use tonic::{Request, Response, Status, Streaming};
 
 use crate::auth::EnrollmentGuard;
-use crate::store::{TaskRecord, TaskStore};
+use crate::store::{EnqueueTask, TaskRecord, TaskStore};
 
 mod scheduler;
 mod snapshot;
@@ -338,6 +338,13 @@ impl ControllerState {
 impl ControllerService {
     pub fn snapshot(&self) -> Result<ControllerSnapshot, String> {
         self.state.snapshot()
+    }
+
+    pub fn enqueue_task(&self, task: EnqueueTask) -> Result<(), String> {
+        self.state
+            .store
+            .enqueue_with_policy(task)
+            .map_err(|error| error.to_string())
     }
 }
 

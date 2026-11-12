@@ -6,6 +6,7 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+axum.workspace = true
 clap.workspace = true
 rusqlite.workspace = true
 scavenger-core = { path = "../scavenger-core" }

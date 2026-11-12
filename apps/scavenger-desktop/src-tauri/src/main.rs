@@ -17,6 +17,11 @@ fn main() {
 fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
     tauri::Builder::default()
         .setup(|app| {
+            if let Some(remote_url) = remote_console_url()? {
+                build_window(app, remote_url)?;
+                return Ok(());
+            }
+
             let database = app.path().app_data_dir()?.join("controller.sqlite3");
             let service = ControllerService::new(TaskStore::open(database)?);
             tauri::async_runtime::spawn(service.clone().run_scheduler());
@@ -44,15 +49,33 @@ fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .map_err(|error| format!("web console did not start: {error}"))?;
             ready.map_err(std::io::Error::other)?;
 
-            let url = format!("http://{address}").parse()?;
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
-                .title("GPU Scavenger")
-                .inner_size(1440.0, 960.0)
-                .min_inner_size(960.0, 640.0)
-                .resizable(true)
-                .build()?;
+            build_window(app, format!("http://{address}").parse()?)?;
             Ok(())
         })
         .run(tauri::generate_context!())?;
+    Ok(())
+}
+
+fn remote_console_url() -> Result<Option<tauri::Url>, Box<dyn Error>> {
+    let mut args = std::env::args().skip(1);
+    while let Some(argument) = args.next() {
+        if argument != "--controller-url" {
+            continue;
+        }
+        let value = args
+            .next()
+            .ok_or_else(|| std::io::Error::other("--controller-url requires a URL"))?;
+        return Ok(Some(value.parse()?));
+    }
+    Ok(None)
+}
+
+fn build_window(app: &mut tauri::App, url: tauri::Url) -> Result<(), Box<dyn Error>> {
+    WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
+        .title("GPU Scavenger")
+        .inner_size(1440.0, 960.0)
+        .min_inner_size(960.0, 640.0)
+        .resizable(true)
+        .build()?;
     Ok(())
 }

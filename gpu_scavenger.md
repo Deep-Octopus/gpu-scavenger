@@ -72,6 +72,7 @@ GPU-Scavenger 面向高校实验室、AIGC 工作室和拥有多台散装工作�
 - Agent 握手上报 OS、架构、GPU 后端、隔离边界、checkpoint/MIG 能力和 schedulable 标志；Controller 对未通过能力边界的 Agent 停止调度；
 - NVML 错误会映射为权限、驱动不可用、不支持或暂态失败；快照保留 GPU/MIG instance identity，当前只观测 MIG，不做 MIG 资源调度。
 - macOS Tauri 原生壳嵌入同一 Controller Web 控制台，使用应用数据目录和动态 loopback 端口；桌面端自身不宣称 GPU Agent 可调度。
+- macOS Tauri 原生壳支持 `--controller-url` 指向远端 Controller Web 地址；通过 SSH tunnel 或受保护的 HTTPS 暴露访问时，Mac 只承担操作界面，Controller 和 Agent 继续运行在 GPU 节点。
 
 本轮没有实现或没有完成验收的能力：容器 runner 矩阵、MIG 资源调度、多节点恢复、生产 artifact 存储、真实训练框架恢复兼容性，以及跨平台 Job Object/ROCm 适配。checkpoint 已用协议兼容 helper 完成真实信号、原子提交和回收验证，但不宣称任意第三方训练框架都兼容。多 Agent 只验收了同一 Controller 内的 round-robin 调度，未宣称多节点故障恢复。
 
@@ -854,6 +855,7 @@ MockGpuProbe 只能验证状态机，不能证明驱动和操作系统行为。�
 - Agent 能力矩阵和调度 fail-closed；
 - MIG identity 观测信息展示；
 - macOS Tauri 原生壳，复用现有控制台并通过动态 loopback 端口启动本地 Controller；
+- macOS Tauri 原生壳可通过 `--controller-url` 复用远端 Controller 控制台；
 - Windows Job Object、MIG 资源调度、AMD/ROCm 和多 Master 保持为后续适配项目，不能以当前 Linux/NVIDIA 证据代替。
 
 ---

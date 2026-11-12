@@ -30,6 +30,16 @@ open ../../target/release/bundle/macos/GPU\ Scavenger.app
 
 The desktop shell is the operator surface; GPU workloads still run on enrolled Linux/NVIDIA Agents.
 
+To point the desktop shell at a Controller running on the GPU server, use an SSH tunnel and pass the forwarded Web URL:
+
+```bash
+ssh -N -L 18081:127.0.0.1:18081 <user>@<gpu-server>
+open -n "target/release/bundle/macos/GPU Scavenger.app" --args \
+  --controller-url http://127.0.0.1:18081
+```
+
+The Controller and Agent stay on the server; the Mac only renders the operator surface.
+
 ## Run the controller
 
 ```bash

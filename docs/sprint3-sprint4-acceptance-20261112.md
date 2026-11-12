@@ -94,6 +94,7 @@ Agent 二进制 SHA-256：
 - 从 `target/release/bundle/macos/GPU Scavenger.app` 启动后，原生窗口加载同一 Web 控制台；本次动态 loopback 端口为 `127.0.0.1:52642`。
 - 窗口显示 `Controller live`、0 个 Agent、空任务账本；点击 `Refresh` 后仍能读取 `/api/status`，返回空队列和 0 Agent 指标。
 - 18080 被本机 Docker Desktop 占用时没有修改或终止 Docker；桌面壳使用动态端口，和现有服务并存。
+- 远端模式使用 `--controller-url http://127.0.0.1:18081` 指向 SSH 转发端口；Tauri 窗口 URL 为 `127.0.0.1:18081/`，没有启动第二个本地 Controller 监听器。
 
 ## 支持边界
 

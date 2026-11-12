@@ -15,3 +15,13 @@ cargo tauri build --manifest-path apps/scavenger-desktop/src-tauri/Cargo.toml --
 ```
 
 The native shell is an operator console. GPU execution still requires a Linux/NVIDIA Agent; macOS reports itself as unschedulable by design.
+
+To use the shell with a Controller running on a GPU server, forward the Controller's Web port to the Mac and pass the forwarded URL:
+
+```bash
+ssh -N -L 18081:127.0.0.1:18081 <user>@<gpu-server>
+open -n "../../target/release/bundle/macos/GPU Scavenger.app" --args \
+  --controller-url http://127.0.0.1:18081
+```
+
+In this mode the Mac window is only the client surface. The Controller and Agent remain on the server.

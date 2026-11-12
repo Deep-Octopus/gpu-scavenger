@@ -1,8 +1,6 @@
 use std::collections::BTreeMap;
-use std::future::Future;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -10,7 +8,7 @@ use scavenger_protocol::control::{
     agent_message, control_server::Control, AgentCapabilities, AgentHealth, AgentMessage,
     ClaimEvent, DeviceState, MasterMessage, TaskEvent, Welcome,
 };
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::transport::{Certificate, Identity, ServerTlsConfig};
 use tonic::{Request, Response, Status, Streaming};
@@ -105,8 +103,6 @@ impl ControllerService {
     }
 }
 
-type ShutdownSignal = Pin<Box<dyn Future<Output = ()> + Send>>;
-
 async fn serve_plain(
     service: ControllerService,
     address: SocketAddr,
@@ -127,32 +123,24 @@ async fn serve_tls(
     {
         let mut reload = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())?;
         loop {
-            let (shutdown_sender, shutdown_receiver) = oneshot::channel();
             let server_service = service.clone();
             let server_tls = tls.clone();
-            let mut server = tokio::spawn(async move {
-                serve_tls_once(
-                    server_service,
-                    address,
-                    server_tls,
-                    Box::pin(async move {
-                        let _ = shutdown_receiver.await;
-                    }),
-                )
-                .await
-            });
+            let mut server =
+                tokio::spawn(
+                    async move { serve_tls_once(server_service, address, server_tls).await },
+                );
             tokio::select! {
                 result = &mut server => return join_server(result),
                 _ = reload.recv() => {
-                    let _ = shutdown_sender.send(());
-                    join_server(server.await)?;
+                    server.abort();
+                    let _ = server.await;
                 }
             }
         }
     }
     #[cfg(not(unix))]
     {
-        serve_tls_once(service, address, tls, Box::pin(std::future::pending())).await
+        serve_tls_once(service, address, tls).await
     }
 }
 
@@ -160,13 +148,12 @@ async fn serve_tls_once(
     service: ControllerService,
     address: SocketAddr,
     tls: TlsServerConfig,
-    shutdown: ShutdownSignal,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let tls_config = load_tls_config(&tls)?;
     tonic::transport::Server::builder()
         .tls_config(tls_config)?
         .add_service(scavenger_protocol::control::control_server::ControlServer::new(service))
-        .serve_with_shutdown(address, shutdown)
+        .serve(address)
         .await
         .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
 }

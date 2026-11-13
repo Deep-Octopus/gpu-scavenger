@@ -20,7 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_tag }}
+          # Build from the current main branch so generated platform assets and
+          # the release workflow fixes are available when backfilling a release.
+          ref: main
 
       - uses: dtolnay/rust-toolchain@stable
         with:

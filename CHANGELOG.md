@@ -10,6 +10,7 @@ The first distributable MVP includes:
 - host Claim, release verification, degraded and quarantined health states;
 - enrollment tokens, TLS/mTLS, certificate reload, and bounded reconnects;
 - Web operator console and a macOS Tauri shell with remote Controller mode;
+- Windows x64 MSI and NSIS installers for the same remote operator console;
 - reproducible Linux x86_64 runtime bundle with install and lifecycle scripts.
 
 Acceptance evidence is recorded under [`docs/`](docs/).

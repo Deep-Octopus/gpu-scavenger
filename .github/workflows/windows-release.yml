@@ -1,0 +1,75 @@
+name: Windows desktop release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub release tag to receive the Windows installers
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Build Windows x64 installers
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build MSI and NSIS installers
+        working-directory: apps/scavenger-desktop
+        shell: pwsh
+        run: npx --yes @tauri-apps/cli@2.12.4 build --bundles nsis,msi
+
+      - name: Prepare release assets
+        shell: pwsh
+        run: |
+          $dist = Join-Path $env:GITHUB_WORKSPACE "dist/windows-x64"
+          New-Item -ItemType Directory -Force -Path $dist | Out-Null
+
+          $nsis = Get-ChildItem "target/release/bundle/nsis" -Filter "*.exe" | Select-Object -First 1
+          $msi = Get-ChildItem "target/release/bundle/msi" -Filter "*.msi" | Select-Object -First 1
+          if ($null -eq $nsis -or $null -eq $msi) {
+            throw "Tauri did not produce both NSIS and MSI installers"
+          }
+
+          Copy-Item $nsis.FullName (Join-Path $dist "GPU-Scavenger-windows-x64-setup.exe")
+          Copy-Item $msi.FullName (Join-Path $dist "GPU-Scavenger-windows-x64.msi")
+          Get-FileHash (Join-Path $dist "GPU-Scavenger-windows-x64-setup.exe") -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  GPU-Scavenger-windows-x64-setup.exe" } |
+            Set-Content (Join-Path $dist "SHA256SUMS-windows")
+          Get-FileHash (Join-Path $dist "GPU-Scavenger-windows-x64.msi") -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  GPU-Scavenger-windows-x64.msi" } |
+            Add-Content (Join-Path $dist "SHA256SUMS-windows")
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpu-scavenger-windows-x64
+          path: dist/windows-x64/
+
+      - name: Upload installers to GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload $env:RELEASE_TAG `
+            "$env:GITHUB_WORKSPACE/dist/windows-x64/GPU-Scavenger-windows-x64-setup.exe" `
+            "$env:GITHUB_WORKSPACE/dist/windows-x64/GPU-Scavenger-windows-x64.msi" `
+            "$env:GITHUB_WORKSPACE/dist/windows-x64/SHA256SUMS-windows" `
+            --clobber `
+            --repo $env:GITHUB_REPOSITORY

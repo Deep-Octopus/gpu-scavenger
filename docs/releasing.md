@@ -32,12 +32,29 @@ ditto -c -k --sequesterRsrc --keepParent \
 Only publish an app archive after launching it once and verifying both local
 and `--controller-url` remote modes.
 
+## Windows desktop
+
+Windows installers are built on a Windows runner because Tauri's WebView2 and
+installer toolchain are platform-specific:
+
+1. Push the desktop and workflow changes to `main`.
+2. Run the **Windows desktop release** workflow manually with the target tag,
+   such as `v0.1.0`.
+3. The workflow builds both `GPU-Scavenger-windows-x64.msi` and
+   `GPU-Scavenger-windows-x64-setup.exe`.
+4. It writes `SHA256SUMS-windows` and uploads all three files to the selected
+   GitHub Release.
+
+The Windows shell is an operator console. It connects to a remote Controller
+through the same SSH tunnel used by the macOS shell and does not run GPU tasks
+locally.
+
 ## Release checklist
 
 1. Update `Cargo.toml` and the changelog version.
 2. Run format, Clippy, and workspace tests.
 3. Build and hash the Linux bundle.
 4. Verify install/start/status/stop on a clean Linux/NVIDIA host.
-5. Launch the macOS app and verify the remote console through an SSH tunnel.
+5. Launch the macOS and Windows apps and verify the remote console through an SSH tunnel.
 6. Create a Git tag such as `v0.1.0` and upload only intended artifacts.
 7. Record real-host evidence under `docs/`.

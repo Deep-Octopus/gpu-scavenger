@@ -1,7 +1,7 @@
 # GPU Scavenger
 
 GPU Scavenger 是面向共享 Linux/NVIDIA 服务器的主机优先 GPU 控制平面。
-它提供持久任务队列、能力感知调度、显式任务所有权、Web 控制台和 macOS
+它提供持久任务队列、能力感知调度、显式任务所有权、Web 控制台和 macOS/Windows
 原生桌面壳，同时避免接管并非由 Agent 创建的进程或 GPU。
 
 [English README](README.md) · [设计文档](gpu_scavenger.md) · [Release](https://github.com/Deep-Octopus/gpu-scavenger/releases)
@@ -54,13 +54,23 @@ ssh -N -L 18082:127.0.0.1:18081 <user>@<gpu-server>
 
 ## Mac 桌面端
 
-桌面端只是操作界面，GPU 任务仍由服务器 Agent 执行。构建或下载 macOS
-`.app` 后，通过转发端口连接远端 Controller：
+桌面端只是操作界面，GPU 任务仍由服务器 Agent 执行。v0.1.0 Release 同时提供
+macOS Apple Silicon `.app` 和 Windows x64 的 `.msi`/NSIS 安装包。通过转发端口
+连接远端 Controller：
 
 ```bash
 open -n "GPU Scavenger.app" --args \
   --controller-url http://127.0.0.1:18082
 ```
+
+Windows 安装后，在 PowerShell 中启动同一个远端控制台：
+
+```powershell
+ssh -N -L 18082:127.0.0.1:18081 <user>@<gpu-server>
+```
+
+然后给 GPU Scavenger 添加参数 `--controller-url
+http://127.0.0.1:18082`。Windows 端不会在本机探测或运行 GPU 任务。
 
 ## 从源码运行
 

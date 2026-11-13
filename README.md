@@ -43,13 +43,13 @@ GPU Scavenger keeps those decisions explicit:
 | Recovery | Agent reconnect, task requeue, degraded and quarantined health states |
 | Security | Loopback defaults, enrollment token, TLS/mTLS, certificate reload on `SIGHUP` |
 | Operations | Prebuilt Linux runtime bundle with install/start/status/stop scripts |
-| UI | Browser console plus macOS `.app` that can connect through an SSH tunnel |
+| UI | Browser console plus macOS and Windows desktop shells that can connect through an SSH tunnel |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Mac[macOS Tauri app] -->|HTTP over SSH tunnel| Web[Controller Web console]
+    Desktop[macOS / Windows Tauri app] -->|HTTP over SSH tunnel| Web[Controller Web console]
     Operator[CLI / browser] --> Web
     Web --> Controller[Controller\nSQLite WAL + scheduler]
     Controller <-->|gRPC stream\nTLS/mTLS optional| AgentA[Linux NVIDIA Agent]
@@ -182,7 +182,27 @@ open -n "target/release/bundle/macos/GPU Scavenger.app" --args \
   --controller-url http://127.0.0.1:18082
 ```
 
-The v0.1.0 release includes a macOS Apple Silicon `.app` archive.
+The v0.1.0 release includes a macOS Apple Silicon `.app` archive and the
+Windows x64 MSI/NSIS installers. Windows is an operator surface; GPU execution
+still stays on Linux/NVIDIA Agents.
+
+## Use the Windows desktop shell
+
+Download either Windows x64 installer from the [v0.1.0 release](https://github.com/Deep-Octopus/gpu-scavenger/releases/tag/v0.1.0):
+
+- `GPU-Scavenger-windows-x64.msi` for a standard Windows Installer flow;
+- `GPU-Scavenger-windows-x64-setup.exe` for the NSIS installer flow.
+
+After installation, forward the Controller Web port from the GPU server and
+launch GPU Scavenger with the forwarded URL:
+
+```powershell
+ssh -N -L 18082:127.0.0.1:18081 <user>@<gpu-server>
+```
+
+Then start the installed app with `--controller-url
+http://127.0.0.1:18082`. The Windows app renders the same operator console as
+the macOS shell; it does not probe or run GPU work locally.
 
 ## Security and ownership model
 

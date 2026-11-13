@@ -1,6 +1,8 @@
 # GPU Scavenger Desktop
 
-The macOS desktop shell embeds the existing controller Web console in a native Tauri window. It starts a local Controller database under the macOS application data directory and binds the console to an ephemeral loopback port, so it does not compete with an existing service on port 18080.
+The desktop shell embeds the existing Controller Web console in a native Tauri
+window. macOS and Windows are operator surfaces; GPU execution remains on a
+Linux/NVIDIA Agent.
 
 From the repository root:
 
@@ -15,6 +17,10 @@ cargo tauri build --manifest-path apps/scavenger-desktop/src-tauri/Cargo.toml --
 ```
 
 The native shell is an operator console. GPU execution still requires a Linux/NVIDIA Agent; macOS reports itself as unschedulable by design.
+
+The Windows x64 MSI and NSIS installers are built by
+`.github/workflows/windows-release.yml` on a Windows runner and published to
+the GitHub Release. Windows also reports itself as unschedulable by design.
 
 To use the shell with a Controller running on a GPU server, forward the Controller's Web port to the Mac and pass the forwarded URL:
 

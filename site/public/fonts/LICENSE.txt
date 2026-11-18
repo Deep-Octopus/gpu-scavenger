@@ -1,0 +1,5 @@
+IBM Plex Sans / IBM Plex Mono
+
+Subsetted woff2 (latin, latin-ext) self-hosted from Google Fonts.
+License: SIL Open Font License 1.1 (https://openfontlicense.org)
+Source: https://github.com/IBM/plex

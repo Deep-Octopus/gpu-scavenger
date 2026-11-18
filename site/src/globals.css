@@ -1,0 +1,1019 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+/* IBM Plex Sans / Mono，OFL-1.1，自托管 latin 子集：
+   Windows 下不再回落到 Arial，数字用等宽 tabular。 */
+@font-face {
+  font-family: 'Plex Sans';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('/fonts/plex-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Plex Sans';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('/fonts/plex-sans-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/plex-mono-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/plex-mono-500-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/plex-mono-400-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/plex-mono-500-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #e7000b;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a1a1a1;
+  --chart-1: #f54900;
+  --chart-2: #009689;
+  --chart-3: #104e64;
+  --chart-4: #ffb900;
+  --chart-5: #fe9a00;
+  --radius: 0.625rem;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a1a1a1;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--site-font);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card: #171717;
+    --card-foreground: #ededed;
+    --popover: #171717;
+    --popover-foreground: #ededed;
+    --primary: #ededed;
+    --primary-foreground: #171717;
+    --secondary: #262626;
+    --secondary-foreground: #ededed;
+    --muted: #262626;
+    --muted-foreground: #a1a1a1;
+    --accent: #262626;
+    --accent-foreground: #ededed;
+    --destructive: #ff6467;
+    --border: #ffffff1a;
+    --input: #ffffff26;
+    --ring: #737373;
+    --chart-1: #8e51ff;
+    --chart-2: #00bc7d;
+    --chart-3: #fe9a00;
+    --chart-4: #ad46ff;
+    --chart-5: #ff2056;
+    --sidebar: #171717;
+    --sidebar-foreground: #ededed;
+    --sidebar-primary: #8e51ff;
+    --sidebar-primary-foreground: #ededed;
+    --sidebar-accent: #262626;
+    --sidebar-accent-foreground: #ededed;
+    --sidebar-border: #ffffff1a;
+    --sidebar-ring: #737373;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--site-font);
+}
+
+/* 设计参数使用工程原有样式管理，工作台只临时覆盖变量。
+   主题锁定为 dark：产品控制台本身以 color-scheme: dark 发布，
+   品牌色板继承 crates/scavenger-controller/web/styles.css。 */
+:root {
+  --site-bg: #0a0d0b;
+  --site-fg: #eef3ec;
+  --site-accent: #d7f26a;
+  --site-on-accent: #11160c;
+  --site-surface: #121714;
+  --site-muted: #8b968e;
+  --site-border: #26302a;
+  --site-font: "Plex Sans", "HarmonyOS Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Helvetica Neue", Arial, sans-serif;
+  --site-radius: 10px;
+  --site-space: 1;
+  --site-type: 1;
+  --site-motion: 1;
+
+  /* 品牌派生令牌，Nudge 不直接驱动，由业务样式消费 */
+  --surface-2: #181f1b;
+  --surface-3: #070908;
+  --quiet: #c4cec6;
+  --accent-deep: #879d34;
+  --accent-tint: #192414;
+  --cyan: #2dd4bf;
+  --cyan-tint: #102623;
+  --danger: #ff6b57;
+  --warn: #f5b942;
+  --font-display: "Space Grotesk Variable", "HarmonyOS Sans SC", "MiSans", "PingFang SC",
+    "Noto Sans CJK SC", "Plex Sans", sans-serif;
+  --mono: "JetBrains Mono Variable", "Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@theme inline {
+  --color-bg: var(--site-bg);
+  --color-fg: var(--site-fg);
+  --color-surface: var(--site-surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--site-border);
+  --color-muted: var(--site-muted);
+  --color-quiet: var(--quiet);
+  --color-acid: var(--site-accent);
+  --color-on-acid: var(--site-on-accent);
+  --color-acid-deep: var(--accent-deep);
+  --color-acid-tint: var(--accent-tint);
+  --color-cyan: var(--cyan);
+  --color-cyan-tint: var(--cyan-tint);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --font-display: var(--font-display);
+  --font-mono: var(--mono);
+  --radius-panel: var(--site-radius);
+}
+
+:root {
+  color-scheme: dark;
+  --background: var(--site-bg);
+  --foreground: var(--site-fg);
+  --card: var(--site-surface);
+  --card-foreground: var(--site-fg);
+  --popover: var(--site-surface);
+  --popover-foreground: var(--site-fg);
+  --primary: var(--site-accent);
+  --primary-foreground: var(--site-on-accent);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--site-fg);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--site-muted);
+  --accent: var(--accent-tint);
+  --accent-foreground: var(--site-fg);
+  --border: var(--site-border);
+  --input: var(--site-border);
+  --ring: var(--site-accent);
+  --radius: var(--site-radius);
+}
+@theme inline {
+  --spacing: calc(0.25rem * var(--site-space));
+  --text-xs: calc(.75rem * var(--site-type));
+  --text-sm: calc(.875rem * var(--site-type));
+  --text-base: calc(1rem * var(--site-type));
+  --text-lg: calc(1.125rem * var(--site-type));
+  --text-xl: calc(1.25rem * var(--site-type));
+  --text-2xl: calc(1.5rem * var(--site-type));
+  --text-3xl: calc(1.875rem * var(--site-type));
+  --text-4xl: calc(2.25rem * var(--site-type));
+  --text-5xl: calc(3rem * var(--site-type));
+  --text-6xl: calc(3.75rem * var(--site-type));
+  --text-7xl: calc(4.5rem * var(--site-type));
+  --text-8xl: calc(6rem * var(--site-type));
+  --text-9xl: calc(8rem * var(--site-type));
+  --default-transition-duration: calc(150ms * var(--site-motion));
+}
+@layer base {
+  button, a { transition-duration: calc(150ms * var(--site-motion)); }
+  @media (prefers-reduced-motion: reduce) {
+    button, a { transition-duration: 0ms; }
+  }
+}
+
+@layer base {
+  * { border-color: var(--site-border); }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--site-bg);
+    color: var(--site-fg);
+    font-family: var(--site-font);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  ::selection { background: #d7f26a2e; color: var(--site-fg); }
+  :focus-visible {
+    outline: 2px solid var(--site-accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-feature-settings: "ss01";
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Lenis 平滑滚动 */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@utility micro {
+  font-family: var(--site-font);
+  font-size: calc(11.5px * var(--site-type));
+  font-weight: 600;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--site-muted);
+}
+
+@utility num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+
+@utility panel {
+  border-radius: var(--site-radius);
+  background: color-mix(in oklab, var(--site-surface) 52%, transparent);
+}
+
+/* 真正需要「这是一块操作表面」的容器才保留描边：控制台、输入框、执行器状态 */
+@utility panel-outlined {
+  border: 1px solid var(--site-border);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+}
+
+/* 旗舰级深色精密仪器表面：微渐变背景 + 1px 金属顶部高光 + 极细边界 */
+.surface-card {
+  border: 1px solid color-mix(in oklab, var(--site-border) 88%, transparent);
+  border-radius: var(--site-radius);
+  background: linear-gradient(180deg, #161d19 0%, #0d110f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 14px 34px -22px rgba(0, 0, 0, 0.75);
+}
+
+/* 高光胶囊徽章 */
+.glow-badge {
+  white-space: nowrap;
+  border: 1px solid color-mix(in oklab, var(--site-accent) 34%, transparent);
+  background: color-mix(in oklab, var(--accent-tint) 75%, transparent);
+  color: var(--site-accent);
+  border-radius: 9999px;
+  box-shadow: 0 0 22px -10px color-mix(in oklab, var(--site-accent) 45%, transparent);
+}
+
+/* 精密坐标暗纹网格背景 */
+.grid-backdrop {
+  background-image:
+    linear-gradient(90deg, color-mix(in oklab, var(--site-border) 32%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in oklab, var(--site-border) 24%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.75;
+  }
+  70% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+.pulse-dot {
+  position: relative;
+}
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  animation: pulse-ring 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ── 无边版式原语 ────────────────────────────────
+   层级由留白、一根顶边线和 hover 底色承担，不靠卡片外框。
+   .tile   可交互单元：hover 时底色浮起 + 左侧酸绿标记条生长
+   .rows   纵向列表：只在相邻项之间画一条线
+   .cells  无边网格：靠 gap 呼吸，项与项之间不画线 */
+.tile {
+  position: relative;
+  transition: background-color 300ms ease;
+}
+.tile::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--site-accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tile:hover,
+.tile:focus-within,
+.tile[data-on="1"] {
+  background: color-mix(in oklab, var(--site-surface) 74%, transparent);
+}
+.tile:hover::before,
+.tile:focus-within::before,
+.tile[data-on="1"]::before {
+  transform: scaleY(1);
+}
+
+.rows > * + * {
+  border-top: 1px solid color-mix(in oklab, var(--site-border) 62%, transparent);
+}
+
+/* 指针跟随的边框高光：只在 hover 时点亮，不常驻 */
+.spot {
+  position: relative;
+  isolation: isolate;
+}
+.spot::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity calc(220ms * var(--site-motion)) ease;
+  background: radial-gradient(
+    240px 240px at var(--mx, 50%) var(--my, 50%),
+    #d7f26a22, transparent 70%);
+  pointer-events: none;
+}
+.spot:hover::before { opacity: 1; }
+
+/* 入场揭示：默认隐藏由 GSAP 接管，reduced-motion 下保持可见 */
+.reveal { opacity: 1; }
+.reveal-ready .reveal { opacity: 0; transform: translateY(22px); }
+
+.hair { height: 1px; background: var(--site-border); border: 0; }
+
+/* 无边分节线：平时隐形，板块进入视口中段时从左边亮起并展开 */
+.hairline {
+  height: 1px;
+  background: color-mix(in oklab, var(--site-border) 85%, transparent);
+  transform-origin: left;
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1), background-color 600ms ease;
+}
+section[data-active="1"] .hairline {
+  background: var(--site-accent);
+}
+
+/* ── 章节页码 ────────────────────────────────────
+   每个板块的编号常驻在眉标左侧：空心的幽灵数字，
+   板块滚到视口中段时充上酸绿，等于「你在这里」的指示灯。 */
+.folio {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(1.35rem * var(--site-type));
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--site-muted) 62%, transparent);
+  transition: color 480ms ease, -webkit-text-stroke-color 480ms ease;
+}
+section[data-active="1"] .folio {
+  color: color-mix(in oklab, var(--site-accent) 88%, transparent);
+  -webkit-text-stroke-color: transparent;
+}
+
+/* 宣言带里的巨型数字：描边空心，hover 时灌满 */
+.ghost-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in oklab, var(--site-accent) 58%, transparent);
+  transition: color 380ms ease;
+}
+button:hover .ghost-num,
+button:focus-visible .ghost-num {
+  color: color-mix(in oklab, var(--site-accent) 20%, transparent);
+}
+
+/* 通栏常量带：两条相同轨道，位移 50% 无缝接上 */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 52s linear infinite;
+}
+.marquee-mask:hover .marquee {
+  animation-play-state: paused;
+}
+
+/* 图解里的文字：SVG 呈现属性不解析 var()，字体只能靠类给 */
+.fig-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 误伤图解：红色准星呼吸一下，指出「这个信号会打到谁」 */
+@keyframes misfire-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.misfire {
+  animation: misfire-pulse 2.6s ease-in-out infinite;
+}
+.group:hover .misfire {
+  animation-duration: 1.1s;
+}
+
+/* 七元组门禁：光束穿过七个字段抵达执行器 */
+.gate-slot {
+  position: relative;
+  overflow: hidden;
+}
+.gate-slot::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--site-accent);
+  transform: scaleX(var(--pass, 1));
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), background-color 220ms ease;
+}
+.gate-slot[data-bad="1"] {
+  background: color-mix(in oklab, var(--danger) 9%, transparent);
+}
+.gate-slot[data-bad="1"]::after {
+  --pass: 0.12;
+  background: var(--danger);
+}
+
+/* 等距实物件：槽位是可聚焦的实体，hover / 选中时整块抬起 */
+.iso-slot {
+  cursor: pointer;
+  outline: none;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-box: fill-box;
+}
+.iso-slot:hover,
+.iso-slot:focus-visible,
+.iso-slot[aria-pressed="true"] {
+  transform: translateY(-9px);
+}
+.iso-slot:focus-visible .iso-pad {
+  opacity: 0.4;
+}
+@keyframes iso-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.iso-in {
+  animation: iso-in 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* 数据包沿铜箔走线跑动 */
+@keyframes iso-packet {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* 站标：撒哈拉耳廓狐吉祥物，指针经过时轻微机敏竖耳微倾 */
+.logo-mascot {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+a:hover .logo-mascot,
+a:focus-visible .logo-mascot,
+.group:hover .logo-mascot {
+  transform: translateY(-1.5px) rotate(-4deg) scale(1.05);
+}
+
+/* 时序回放装置：随播放头点亮或消失，全部由 data-on 驱动 */
+.rig-fade,
+.rig-pip {
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+.rig-fade[data-on="1"],
+.rig-pip[data-on="1"] {
+  opacity: 1;
+}
+.rig-out {
+  opacity: 1;
+  transition: opacity 300ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-box: fill-box;
+}
+.rig-out[data-on="1"] {
+  opacity: 0.1;
+  transform: translateY(6px) scale(0.86);
+}
+.rig-stamp {
+  opacity: 0;
+  transform: scale(1.16);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 200ms ease, transform 340ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rig-stamp[data-on="1"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .misfire {
+    animation: none;
+    opacity: 0.9;
+  }
+  .gate-slot::after {
+    transition: none;
+  }
+  .tile::before {
+    transition: none;
+  }
+  .iso-slot {
+    transition: none;
+  }
+  .logo-mascot {
+    transition: none;
+  }
+  .rig-fade,
+  .rig-pip,
+  .rig-out,
+  .rig-stamp {
+    transition: none;
+  }
+  .iso-in {
+    animation: none;
+  }
+  .marquee {
+    animation: none;
+  }
+  .folio {
+    transition: none;
+  }
+  .hairline {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+/* WebGL 背景场的静态退化：无 WebGL、reduced-motion 或加载失败时仍然有层次 */
+.shader-field {
+  position: absolute;
+  inset: 0;
+  background: var(--site-bg);
+}
+.shader-field[data-reduced="true"],
+.shader-field[data-fallback="true"] {
+  background: var(--site-bg) url("/img/hero-board.jpg") center / cover no-repeat;
+}
+.shader-field[data-reduced="true"]::after,
+.shader-field[data-fallback="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #101211c9, #101211f2 70%);
+}
+
+/* 时序回放：滚动进度驱动的高亮，data-on 由 GSAP 写入，避免逐帧 React 重渲染 */
+.mk {
+  background: var(--site-bg);
+  transition: background-color calc(320ms * var(--site-motion)) ease;
+}
+.mk .mk-t {
+  color: var(--site-muted);
+  transition: color calc(320ms * var(--site-motion)) ease;
+}
+.mk .mk-b {
+  color: var(--site-muted);
+  transition: color calc(320ms * var(--site-motion)) ease;
+}
+.mk[data-on="1"] {
+  background: var(--accent-tint);
+}
+.mk[data-on="1"] .mk-t {
+  color: var(--site-accent);
+}
+.mk[data-on="1"] .mk-b {
+  color: var(--site-fg);
+}
+.st {
+  color: #6f7770;
+  transition: color calc(320ms * var(--site-motion)) ease;
+}
+.st[data-on="1"] {
+  color: var(--site-fg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk[data-on="0"] {
+    background: var(--site-bg);
+  }
+  .mk,
+  .mk .mk-t,
+  .mk .mk-b,
+  .st {
+    transition: none;
+  }
+}
+
+.sb-log {
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-border) transparent;
+  overscroll-behavior: contain;
+}
+
+/* 事件流空闲态的光标：steps 闪烁比渐变更像终端，也说明这一栏是活的 */
+.sb-caret {
+  animation: caret-step 1.1s steps(1, end) infinite;
+}
+@keyframes caret-step {
+  0%,
+  54% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-caret {
+    animation: none;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  transform: translateY(-160%);
+  border-radius: 6px;
+  background: var(--site-accent);
+  color: var(--site-on-accent);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* shadcn 原语在品牌令牌下的对齐：命令面板与弹窗锁定深曜石主题 */
+[data-slot="dialog-overlay"] {
+  background: rgba(4, 7, 5, 0.72);
+  backdrop-filter: blur(4px);
+}
+[data-slot="dialog-content"] {
+  border: 1px solid color-mix(in oklab, var(--site-border) 95%, var(--site-accent) 5%);
+  background: var(--site-surface);
+  color: var(--site-fg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 64px -16px rgba(0, 0, 0, 0.88);
+}
+[data-slot="dialog-close"] {
+  color: var(--site-muted);
+}
+[data-slot="dialog-close"]:hover {
+  color: var(--site-fg);
+}
+[data-slot="command"] {
+  background: var(--site-surface);
+  color: var(--site-fg);
+}
+[data-slot="command-input-wrapper"] {
+  border-bottom-color: var(--site-border);
+  background: var(--surface-3);
+}
+[data-slot="command-input-wrapper"] svg {
+  color: var(--site-accent);
+  opacity: 0.85;
+}
+[data-slot="command-input"] {
+  color: var(--site-fg);
+}
+[data-slot="command-input"]::placeholder {
+  color: var(--site-muted);
+}
+[data-slot="command-list"] {
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-border) transparent;
+}
+[cmdk-group-heading] {
+  color: var(--site-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+[cmdk-item] {
+  color: var(--quiet);
+  border-radius: 7px;
+  cursor: pointer;
+}
+[cmdk-item][data-selected="true"] {
+  background: var(--accent-tint);
+  color: var(--site-fg);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--site-accent) 36%, transparent);
+}
+[cmdk-item][data-selected="true"] .cmd-idx {
+  color: var(--site-accent);
+}
+
+/* React Flow 状态机画布：v13 用 --xy-*-default 主题变量，强制深色并换成品牌令牌 */
+.react-flow {
+  color-scheme: dark;
+  --xy-background-color-default: var(--site-bg);
+  --xy-background-pattern-dots-color-default: var(--site-border);
+  /* 未点亮的走线也要看得见：#2d332f 压在 #101211 上只有 1.6:1，等于没画 */
+  --xy-edge-stroke-default: rgba(237, 241, 235, 0.28);
+  --xy-edge-stroke-width-default: 1.25;
+  --xy-edge-stroke-selected-default: var(--site-accent);
+  --xy-node-background-color-default: transparent;
+  --xy-node-border-default: none;
+  --xy-node-border-selected-default: none;
+  --xy-node-color-default: var(--site-fg);
+  --xy-handle-background-color-default: var(--site-border);
+  --xy-handle-border: none;
+  --xy-attribution-background-color-default: transparent;
+  --xy-selection-background-color-default: var(--accent-tint);
+  font-family: inherit;
+}
+.react-flow__attribution {
+  background: transparent;
+  color: var(--site-muted);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+.react-flow__attribution:hover {
+  color: var(--quiet);
+}
+.react-flow__edge-text {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+.react-flow__edge-textbg {
+  fill: var(--site-bg);
+}
+.react-flow__edge-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.react-flow__node {
+  font-family: inherit;
+}
+.react-flow__handle {
+  border: none;
+  background: var(--site-border);
+}
+.react-flow__pane {
+  cursor: grab;
+}
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+.react-flow__node:focus-visible {
+  outline: 1px solid var(--site-accent);
+  outline-offset: 3px;
+}
+.react-flow__controls {
+  display: none;
+}
+
+/* 设计决定面板：闸刀合上后，被接通的那条走线上跑电流 */
+@keyframes wire-flow {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+.wire-live {
+  stroke-dasharray: 5 21;
+  animation: wire-flow 900ms linear infinite;
+}
+
+/* 演示联动：刚命中的那条跃迁上跑一颗电脉冲，落点状态外扩一圈描边 */
+.flow-tracer {
+  stroke-dasharray: 5 95;
+  animation: flow-tracer 820ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes flow-tracer {
+  from {
+    stroke-dashoffset: 0;
+    opacity: 0.2;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    stroke-dashoffset: -100;
+    opacity: 0.15;
+  }
+}
+.node-hit {
+  animation: node-hit 900ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@keyframes node-hit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.07);
+  }
+}
+.ghost-dot {
+  animation: ghost-blink 850ms ease-in-out 2;
+}
+@keyframes ghost-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-tracer {
+    animation: none;
+    opacity: 0;
+  }
+  .node-hit {
+    animation: none;
+    opacity: 0.55;
+    transform: none;
+  }
+  .ghost-dot {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* 跨板块引用：目标板块左边缘亮一下，说明「刚才是跳到这里」 */
+[data-flash="1"] {
+  animation: section-flash 1500ms ease-out;
+}
+@keyframes section-flash {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  18%, 62% { box-shadow: inset 3px 0 0 0 var(--site-accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wire-live {
+    animation: none;
+    stroke-dasharray: none;
+  }
+  [data-flash="1"] {
+    animation: none;
+    box-shadow: inset 3px 0 0 0 var(--site-accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: none;
+    animation: none;
+  }
+}
+

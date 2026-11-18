@@ -48,18 +48,16 @@
 2. **领取学生权益**（可选但建议）
    https://university.aliyun.com/action/qoder 完成学生认证，领 Qoder CN 一个月免费权益。
 
-3. **发布作品帖**（正文已就绪，只差发布动作）
-   [`tianchi-post.md`](tianchi-post.md) 的自我介绍已填、6 张配图已传到论坛图床（`static.tianchi.aliyun.com/userimg/…`），
-   第五段按赛题要求改写成「怎么用 Qoder 写出来的」过程叙述，不再出现任何"包装/宣传"式表述。
-   发布时只需要：
-   - 入口是**天池技术圈** https://tianchi.aliyun.com/forum（赛题页本身没有论坛 tab）；
-   - **关联比赛选「2026 Qoder 高校创造力大赛」** ← 漏了等于没提交；
-   - 标题建议 `【StudyHack】GPU Scavenger｜……`，正文首行已写 `参赛赛道：StudyHack 学习科研`；
-   - 确认开头作品链接就是那个 `.qoder.zone` 地址，且**在未登录浏览器里能打开**。
+3. **核对已发布的作品帖**（正文已发布，只剩验证）
+   发帖入口是**天池技术圈** https://tianchi.aliyun.com/forum（赛题页本身没有论坛 tab），
+   标题格式 `【StudyHack】GPU Scavenger｜……`，正文首行 `参赛赛道：StudyHack 学习科研`。
+   - 帖子页面是否显示 **「关联比赛: 2026 Qoder 高校创造力大赛」** ← 丢了这行等于没提交，必须补上；
+   - 新帖可能有内容审核延迟，未登录状态下暂时搜不到属正常，隔几小时用无痕窗口再开一次确认公开可见；
+   - 确认开头作品链接就是那个 `.qoder.zone` 地址，且**在手机流量下能打开**。
 
 4. **社交传播奖**（可选，限量 1000 份，先到先得）
    发小红书/抖音/X，标题带【2026 Qoder 高校创造力大赛】并 @ 对应平台 Qoder 官方账号，
-   然后把链接填进帖子最后那段。
+   然后把链接填进帖子最后那段，并在官方表单里登记（表单入口在赛题页「奖项设置」那一行）。
 
 ## 提交前自查
 
@@ -75,7 +73,7 @@
 
 | 项 | 现状 | 建议说法 |
 | --- | --- | --- |
-| `78.4%` / `~21%` | 页面 KPI，仓库内推不出来 | 标为场景推演，不写进帖子正文，见 `metrics-sources.md` 第四节 |
+| `78.4%` / `~21%` | 页面 KPI，仓库内推不出来 | 帖子已明写它是推演、并指向口径文档；答辩沿用同一说法 |
 | `T_detect 11ms` | 页面有，验收记录无对应观测 | 补一次带时间戳的实测，或说明是演练台参数 |
 | 472ms 统计口径 | 2 轮样本，非 p95 | 主动说"实测落点"，p95 是设计目标 ≤1500ms |
 | Windows / ROCm / MIG / 多 Master | 未验证，代码 fail-closed | 说"能力上报为不可用、调度器跳过"，不说"支持" |
@@ -102,8 +100,17 @@ node site/dev/longshot.mjs
 node site/dev/link-probe.mjs
 ```
 
-## 未提交到 Git
+## Git 状态
 
-`site/`、`vibe_images/`、`docs/competition/` 目前都是**未跟踪**状态（`git status` 可见）。
-本轮没有创建任何 commit——需要提交时明确告诉我，我会先让你确认要纳入哪些文件
-（`site/node_modules`、`site/dist`、`.qoder-sites/` 已被 `site/.gitignore` 排除）。
+已推到公开仓库 `https://github.com/Deep-Octopus/gpu-scavenger`：
+
+- `feat: add the competition site and its verification harnesses` —— 147 个文件，`site/src`、`site/dev`
+  （`shoot.mjs` / `longshot.mjs` / `link-probe.mjs` / `flow-probe.mjs`）、`site/PROVENANCE.md`、站点描述符都在里面；
+  `site/node_modules`、`site/dist`、`.qoder-sites/` 已被 `site/.gitignore` 排除，未进仓库。
+- `docs: add competition submission materials and metric provenance` —— 帖子正文、技术卷、答辩卷、口径卷四份 Markdown。
+
+**故意没进仓库**：`docs/competition/shots/`（30 张站点截图，8.5 MB）已经发在论坛图床上，重复入库只会让仓库变重；
+`vibe_images/`（9 MB ImageGen 中间产物，未被源码引用）。要归档就说一声。
+
+因为帖子第五段引用了仓库里的具体文件，**以后每次改完站点或口径都要顺手 push**，
+否则公开仓库会和帖子里的说法对不上——这是评委最容易核实的一条。
